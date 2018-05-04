@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27428.2027
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gameboy-cpp", "gameboy-cpp\gameboy-cpp.vcxproj", "{5E50C4E5-E8EC-4AD4-A093-CC513E5C5C04}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5E50C4E5-E8EC-4AD4-A093-CC513E5C5C04}.Debug|x64.ActiveCfg = Debug|x64
+		{5E50C4E5-E8EC-4AD4-A093-CC513E5C5C04}.Debug|x64.Build.0 = Debug|x64
+		{5E50C4E5-E8EC-4AD4-A093-CC513E5C5C04}.Debug|x86.ActiveCfg = Debug|Win32
+		{5E50C4E5-E8EC-4AD4-A093-CC513E5C5C04}.Debug|x86.Build.0 = Debug|Win32
+		{5E50C4E5-E8EC-4AD4-A093-CC513E5C5C04}.Release|x64.ActiveCfg = Release|x64
+		{5E50C4E5-E8EC-4AD4-A093-CC513E5C5C04}.Release|x64.Build.0 = Release|x64
+		{5E50C4E5-E8EC-4AD4-A093-CC513E5C5C04}.Release|x86.ActiveCfg = Release|Win32
+		{5E50C4E5-E8EC-4AD4-A093-CC513E5C5C04}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C0277CFA-AC86-428F-8F39-FADA36151135}
+	EndGlobalSection
+EndGlobal
