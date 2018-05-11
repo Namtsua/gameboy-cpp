@@ -69,7 +69,14 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>C:\Users\Spencer Austman\Code\Git\gameboy-cpp\gameboy-cpp\gameboy-cpp\SDL\Include\SDL;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\Spencer Austman\Code\Git\gameboy-cpp\gameboy-cpp\gameboy-cpp\SDL\Libraries;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>C:\Users\Spencer Austman\Code\Git\gameboy-cpp\gameboy-cpp\gameboy-cpp\SDL\Include\SDL;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\Spencer Austman\Code\Git\gameboy-cpp\gameboy-cpp\gameboy-cpp\SDL\Libraries;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -77,6 +84,9 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>SDL2_ttf.lib;SDL2_mixer-x64.lib;SDL2-x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -85,6 +95,9 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>SDL2_ttf.lib;SDL2_mixer-x64.lib;SDL2-x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -118,11 +131,13 @@
     <ClCompile Include="cpu.cpp" />
     <ClCompile Include="gameboy.cpp" />
     <ClCompile Include="gpu.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="mmu.cpp" />
     <ClCompile Include="ops.cpp" />
     <ClCompile Include="registers.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="common.hpp" />
     <ClInclude Include="cpu.hpp" />
     <ClInclude Include="gpu.hpp" />
     <ClInclude Include="mmu.hpp" />
