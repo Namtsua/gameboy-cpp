@@ -1,12 +1,27 @@
+#pragma once
 #include "common.hpp"
 
 class Registers
 {
 	public:
-		uint8_t A; uint8_t F;
-		uint8_t B; uint8_t C;
-		uint8_t D; uint8_t E;
-		uint8_t H; uint8_t L;
-		uint16_t SP;
-		uint16_t PC;
+		void set_register(const Register& r, const byte& value);
+		byte get_register(const Register& r) const;
+		word get_stack_pointer() const;
+		void set_stack_pointer(const word& value);
+		void increment_stack_pointer();
+		void decrement_stack_pointer();
+		word get_program_counter() const;
+		void set_program_counter(const word& value);
+		void increment_register(const Register& r);
+		void decrement_register(const Register& r);
+
+	private:
+		byte A; byte F;
+		byte B; byte C;
+		byte D; byte E;
+		byte H; byte L;
+		word SP;
+		word PC;
+		int m;
+		int t;
 };

@@ -139,6 +139,7 @@
   <ItemGroup>
     <ClInclude Include="common.hpp" />
     <ClInclude Include="cpu.hpp" />
+    <ClInclude Include="gameboy.hpp" />
     <ClInclude Include="gpu.hpp" />
     <ClInclude Include="mmu.hpp" />
     <ClInclude Include="ops.hpp" />
