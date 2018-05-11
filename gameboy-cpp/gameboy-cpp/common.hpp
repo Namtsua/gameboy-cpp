@@ -17,3 +17,8 @@ enum Register
 	R_H,
 	R_L
 };
+
+namespace Contants
+{
+	const int REGISTER_COUNT = 8;
+}
