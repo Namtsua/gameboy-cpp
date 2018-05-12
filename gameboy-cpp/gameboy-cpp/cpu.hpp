@@ -122,7 +122,7 @@ public:
 	void execute_5D_opcode();
 	void execute_5E_opcode();
 	void execute_5F_opcode();
-	
+
 	// 0x6X opcodes
 	void execute_6x_opcode();
 	void execute_60_opcode();
@@ -141,7 +141,7 @@ public:
 	void execute_6D_opcode();
 	void execute_6E_opcode();
 	void execute_6F_opcode();
-	
+
 	// 0x7X opcodes
 	void execute_7x_opcode();
 	void execute_70_opcode();
@@ -160,7 +160,7 @@ public:
 	void execute_7D_opcode();
 	void execute_7E_opcode();
 	void execute_7F_opcode();
-	
+
 	// 0x8X opcodes
 	void execute_8x_opcode();
 	void execute_80_opcode();
@@ -179,7 +179,7 @@ public:
 	void execute_8D_opcode();
 	void execute_8E_opcode();
 	void execute_8F_opcode();
-	
+
 	// 0x9X opcodes
 	void execute_9x_opcode();
 	void execute_90_opcode();
@@ -274,7 +274,7 @@ public:
 	void execute_DD_opcode();
 	void execute_DE_opcode();
 	void execute_DF_opcode();
-	
+
 	// 0xEX opcodes
 	void execute_Ex_opcode();
 	void execute_E0_opcode();
@@ -293,7 +293,7 @@ public:
 	void execute_ED_opcode();
 	void execute_EE_opcode();
 	void execute_EF_opcode();
-	
+
 	// 0xFX opcodes
 	void execute_Fx_opcode();
 	void execute_F0_opcode();
