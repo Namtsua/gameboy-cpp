@@ -21,8 +21,7 @@ class Registers
 		void set_program_counter(const word& value);
 		void increment_register(const Register& r);
 		void decrement_register(const Register& r);
-		void increment_machine_cycle(const byte& value);
-		void increment_tick_cycle(const byte& value);
+		void increment_clock_cycles(const byte& t_val, const byte& m_val);
 
 	private:
 		byte A; byte F;
