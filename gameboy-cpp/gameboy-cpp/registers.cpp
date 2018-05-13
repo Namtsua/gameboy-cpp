@@ -7,8 +7,8 @@ void Registers::initialize()
 	for (int i = 0; i < REGISTER_COUNT; ++i)
 		set_register(static_cast<Register>(i), 0x0); // Reset all registers
 
-	set_stack_pointer(0x0); // Reset stack pointer
-	set_program_counter(0x0); // Reset program counter
+	set_stack_pointer(0xFFFE); // Reset stack pointer
+	set_program_counter(0x100); // Reset program counter
 	m = 0; // Reset machine cycle clock
 	t = 0; // Reset tick cycle clock
 }
@@ -49,40 +49,87 @@ byte Registers::get_register(const Register& r) const
 	}
 }
 
-void Registers::register_addition(const Register &r, const byte& value)
+void Registers::register_addition(const Register &r, const byte& value, const bool& carry /*=false*/)
 {
-	switch (r)
+	const byte& reg_value = get_register(r);
+	byte result = reg_value + value;
+	CLEAR_FLAG(SUB_FLAG);
+
+	if (carry)
 	{
-	case R_A: A += value; break;
-	case R_B: B += value; break;
-	case R_C: C += value; break;
-	case R_D: D += value; break;
-	case R_E: E += value; break;
-	case R_F: F += value; break;
-	case R_H: H += value; break;
-	case R_L: L += value; break;
-	default:
-		fprintf(stderr, "Unknown register specified");
-		exit(1);
+		const byte& carry = GET_FLAG(CARRY_FLAG) ? 1 : 0;
+		result += carry;
+
+		if ((int)(reg_value & 0x0F) + (int)(value & 0x0F) + (int)carry > 0x0F) 
+			SET_FLAG(HALF_CARRY_FLAG);
+		else 
+			CLEAR_FLAG(HALF_CARRY_FLAG);
+
+		if ((int)(reg_value & 0xFF) + (int)(value & 0xFF) + (int)carry > 0xFF) 
+			SET_FLAG(CARRY_FLAG);
+		else 
+			CLEAR_FLAG(CARRY_FLAG);
 	}
+	else
+	{
+		if ((int)(reg_value & 0x0F) + (int)(value & 0x0F) > 0x0F)
+			SET_FLAG(HALF_CARRY_FLAG);
+		else
+			CLEAR_FLAG(HALF_CARRY_FLAG);
+
+		if ((int)(reg_value & 0xFF) + (int)(value & 0xFF) > 0xFF)
+			SET_FLAG(CARRY_FLAG);
+		else
+			CLEAR_FLAG(CARRY_FLAG);
+	}
+
+	if (result == 0x00)
+		SET_FLAG(ZERO_FLAG);
+	else
+		CLEAR_FLAG(ZERO_FLAG);
+	
+	set_register(r, result);
 }
 
-void Registers::register_subtraction(const Register &r, const byte& value)
+void Registers::register_subtraction(const Register &r, const byte& value, const bool& carry /*=false*/)
 {
-	switch (r)
+	const byte& reg_value = get_register(r);
+	byte result = reg_value - value;
+	SET_FLAG(SUB_FLAG);
+
+	if (carry)
 	{
-	case R_A: A -= value; break;
-	case R_B: B -= value; break;
-	case R_C: C -= value; break;
-	case R_D: D -= value; break;
-	case R_E: E -= value; break;
-	case R_F: F -= value; break;
-	case R_H: H -= value; break;
-	case R_L: L -= value; break;
-	default:
-		fprintf(stderr, "Unknown register specified");
-		exit(1);
+		const byte& carry = GET_FLAG(CARRY_FLAG) ? 1 : 0;
+		result += carry;
+
+		if ((int)(reg_value & 0x0F) < ((int)(value & 0x0F) + (int)carry))
+			SET_FLAG(HALF_CARRY_FLAG);
+		else
+			CLEAR_FLAG(HALF_CARRY_FLAG);
+
+		if ((int)(reg_value & 0xFF) < ((int)(value & 0x0F) + (int)carry))
+			SET_FLAG(CARRY_FLAG);
+		else
+			CLEAR_FLAG(CARRY_FLAG);
 	}
+	else
+	{
+		if ((int)(reg_value & 0x0F) < (int)(value & 0x0F))
+			SET_FLAG(HALF_CARRY_FLAG);
+		else
+			CLEAR_FLAG(CARRY_FLAG);
+
+		if ((int)(reg_value & 0xFF) < (int)(value & 0xFF))
+			SET_FLAG(CARRY_FLAG);
+		else
+			CLEAR_FLAG(CARRY_FLAG);
+	}
+	
+	if (result == 0x00)
+		SET_FLAG(ZERO_FLAG);
+	else
+		CLEAR_FLAG(ZERO_FLAG);
+	set_register(r, result);
 }
 
 void Registers::register_multiplication(const Register &r, const byte& value)
