@@ -60,14 +60,14 @@ void Registers::register_addition(const Register &r, const byte& value, const bo
 		const byte& carry = GET_FLAG(CARRY_FLAG) ? 1 : 0;
 		result += carry;
 
-		if ((int)(reg_value & 0x0F) + (int)(value & 0x0F) + (int)carry > 0x0F) 
+		if ((int)(reg_value & 0x0F) + (int)(value & 0x0F) + (int)carry > 0x0F)
 			SET_FLAG(HALF_CARRY_FLAG);
-		else 
+		else
 			CLEAR_FLAG(HALF_CARRY_FLAG);
 
-		if ((int)(reg_value & 0xFF) + (int)(value & 0xFF) + (int)carry > 0xFF) 
+		if ((int)(reg_value & 0xFF) + (int)(value & 0xFF) + (int)carry > 0xFF)
 			SET_FLAG(CARRY_FLAG);
-		else 
+		else
 			CLEAR_FLAG(CARRY_FLAG);
 	}
 	else
@@ -87,11 +87,11 @@ void Registers::register_addition(const Register &r, const byte& value, const bo
 		SET_FLAG(ZERO_FLAG);
 	else
 		CLEAR_FLAG(ZERO_FLAG);
-	
+
 	set_register(r, result);
 }
 
-void Registers::register_subtraction(const Register &r, const byte& value, const bool& carry /*=false*/)
+void Registers::register_subtraction(const Register &r, const byte& value, const bool& carry /* = false */)
 {
 	const byte& reg_value = get_register(r);
 	byte result = reg_value - value;
@@ -124,7 +124,7 @@ void Registers::register_subtraction(const Register &r, const byte& value, const
 		else
 			CLEAR_FLAG(CARRY_FLAG);
 	}
-	
+
 	if (result == 0x00)
 		SET_FLAG(ZERO_FLAG);
 	else
@@ -206,37 +206,36 @@ void Registers::register_bitwise_xor(const Register &r, const byte& value)
 
 void Registers::increment_register(const Register& r)
 {
-	switch (r)
-	{
-	case R_A: ++A;	break;
-	case R_B: ++B;	break;
-	case R_C: ++C;	break;
-	case R_D: ++D;	break;
-	case R_E: ++E;	break;
-	case R_F: ++F;	break;
-	case R_H: ++H;	break;
-	case R_L: ++L;	break;
-	default:
-		fprintf(stderr, "Unknown register specified");
-		exit(1);
-	}
+	byte result = get_register(r) + 1;
+	if ((result & 0x0F) == 0x00)
+		SET_FLAG(HALF_CARRY_FLAG);
+	else
+		CLEAR_FLAG(HALF_CARRY_FLAG);
+
+	if (result == 0x00)
+		SET_FLAG(ZERO_FLAG);
+	else
+		CLEAR_FLAG(ZERO_FLAG);
+
+	CLEAR_FLAG(SUB_FLAG);
+	set_register(r, result);
 }
 void Registers::decrement_register(const Register& r)
 {
-	switch (r)
-	{
-	case R_A: --A;	break;
-	case R_B: --B;	break;
-	case R_C: --C;	break;
-	case R_D: --D;	break;
-	case R_E: --E;	break;
-	case R_F: --F;	break;
-	case R_H: --H;	break;
-	case R_L: --L;	break;
-	default:
-		fprintf(stderr, "Unknown register specified");
-		exit(1);
-	}
+	byte result = get_register(r) - 1;
+
+	if (result = 0x00)
+		SET_FLAG(ZERO_FLAG);
+	else
+		CLEAR_FLAG(ZERO_FLAG);
+
+	if ((result & 0x0F) == 0x0F)
+		SET_FLAG(HALF_CARRY_FLAG);
+	else
+		CLEAR_FLAG(HALF_CARRY_FLAG);
+
+	SET_FLAG(SUB_FLAG);
+	set_register(r, result);
 }
 
 word Registers::get_stack_pointer() const
