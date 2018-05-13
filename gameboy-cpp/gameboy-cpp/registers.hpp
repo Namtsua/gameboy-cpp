@@ -25,6 +25,8 @@ public:
 	void set_stack_pointer(const word& value);
 	void increment_stack_pointer();
 	void decrement_stack_pointer();
+	void complement_register_A();
+	void complement_carry_flag();
 	word get_program_counter() const;
 	void set_program_counter(const word& value);
 	void increment_register(const Register& r);

@@ -29,6 +29,10 @@ void CPU::cycle()
 		break;
 	case 0x10: break;
 	case 0x20: break;
+	case 0x2F: // CPL
+		m_registers.complement_register_A();
+		m_registers.increment_clock_cycles(4, 1);
+		break;
 	case 0x30: break;
 		// INC (8-bit)
 	case 0x04: case 0x0C: case 0x14: case 0x1C: case 0x24: case 0x2C: case 0x3C:
@@ -43,6 +47,10 @@ void CPU::cycle()
 		// const byte& value = memory[pc + 1];
 		// m_registers.
 
+		break;
+	case 0x3F: // CCF
+		m_registers.complement_carry_flag();
+		m_registers.increment_clock_cycles(4, 1);
 		break;
 		// LOAD REG, REG
 	case 0x40:	case 0x41:	case 0x42:	case 0x43:	case 0x44:	case 0x45:	case 0x47:	// LD B, <reg>

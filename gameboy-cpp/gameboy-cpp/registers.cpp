@@ -232,6 +232,20 @@ void Registers::decrement_register(const Register& r)
 	set_register(r, result);
 }
 
+void Registers::complement_register_A()
+{
+	const byte& result = ~A;
+	set_register(R_A, result);
+}
+
+void Registers::complement_carry_flag()
+{
+	CLEAR_FLAG(SUB_FLAG);
+	CLEAR_FLAG(HALF_CARRY_FLAG);
+	SET_FLAG(~GET_FLAG(CARRY_FLAG));
+}
+
+
 word Registers::get_stack_pointer() const
 {
 	return SP;
