@@ -152,56 +152,50 @@ void Registers::register_multiplication(const Register &r, const byte& value)
 
 void Registers::register_bitwise_and(const Register &r, const byte& value)
 {
-	switch (r)
-	{
-	case R_A: A &= value; break;
-	case R_B: B &= value; break;
-	case R_C: C &= value; break;
-	case R_D: D &= value; break;
-	case R_E: E &= value; break;
-	case R_F: F &= value; break;
-	case R_H: H &= value; break;
-	case R_L: L &= value; break;
-	default:
-		fprintf(stderr, "Unknown register specified");
-		exit(1);
-	}
+	const byte& reg_value = get_register(r);
+	byte result = reg_value & value;
+
+	if (result == 0x00)
+		SET_FLAG(ZERO_FLAG);
+	else
+		CLEAR_FLAG(ZERO_FLAG);
+
+	CLEAR_FLAG(SUB_FLAG);
+	CLEAR_FLAG(CARRY_FLAG);
+	SET_FLAG(HALF_CARRY_FLAG);
+	set_register(r, result);
 }
 
 void Registers::register_bitwise_or(const Register &r, const byte& value)
 {
-	switch (r)
-	{
-	case R_A: A |= value; break;
-	case R_B: B |= value; break;
-	case R_C: C |= value; break;
-	case R_D: D |= value; break;
-	case R_E: E |= value; break;
-	case R_F: F |= value; break;
-	case R_H: H |= value; break;
-	case R_L: L |= value; break;
-	default:
-		fprintf(stderr, "Unknown register specified");
-		exit(1);
-	}
+	const byte& reg_value = get_register(r);
+	byte result = reg_value | value;
+
+	if (result == 0x00)
+		SET_FLAG(ZERO_FLAG);
+	else
+		CLEAR_FLAG(ZERO_FLAG);
+
+	CLEAR_FLAG(SUB_FLAG);
+	CLEAR_FLAG(HALF_CARRY_FLAG);
+	CLEAR_FLAG(CARRY_FLAG);
+	set_register(r, result);
 }
 
 void Registers::register_bitwise_xor(const Register &r, const byte& value)
 {
-	switch (r)
-	{
-	case R_A: A ^= value; break;
-	case R_B: B ^= value; break;
-	case R_C: C ^= value; break;
-	case R_D: D ^= value; break;
-	case R_E: E ^= value; break;
-	case R_F: F ^= value; break;
-	case R_H: H ^= value; break;
-	case R_L: L ^= value; break;
-	default:
-		fprintf(stderr, "Unknown register specified");
-		exit(1);
-	}
+	const byte& reg_value = get_register(r);
+	byte result = reg_value ^ value;
+
+	if (result == 0x00)
+		SET_FLAG(ZERO_FLAG);
+	else
+		CLEAR_FLAG(ZERO_FLAG);
+
+	CLEAR_FLAG(SUB_FLAG);
+	CLEAR_FLAG(HALF_CARRY_FLAG);
+	CLEAR_FLAG(CARRY_FLAG);
+	set_register(r, result);
 }
 
 void Registers::increment_register(const Register& r)
