@@ -11,6 +11,14 @@ void Registers::initialize()
 	set_program_counter(0x100); // Reset program counter
 	m = 0; // Reset machine cycle clock
 	t = 0; // Reset tick cycle clock
+	AF.upper_register = &A;
+	AF.lower_register = &F;
+	BC.upper_register = &B;
+	BC.lower_register = &C;
+	DE.upper_register = &D;
+	DE.lower_register = &E;
+	HL.upper_register = &H;
+	HL.lower_register = &L;
 }
 
 void Registers::set_register(const Register& r, const byte& value)
@@ -48,6 +56,7 @@ byte Registers::get_register(const Register& r) const
 		exit(1);
 	}
 }
+
 
 void Registers::register_addition(const Register &r, const byte& value, const bool& carry /*=false*/)
 {
@@ -198,6 +207,28 @@ void Registers::register_bitwise_xor(const Register &r, const byte& value)
 	set_register(r, result);
 }
 
+void Registers::register_compare(const Register &r, const byte& value)
+{
+	const byte& reg_value = get_register(r);
+	byte result = reg_value - value;
+
+	if (result == 0x00)
+		SET_FLAG(ZERO_FLAG);
+	else
+		CLEAR_FLAG(ZERO_FLAG);
+
+	SET_FLAG(SUB_FLAG);
+
+	if ((reg_value & 0x0F) - (value & 0x0F) < 0)
+		SET_FLAG(HALF_CARRY_FLAG);
+	else
+		SET_FLAG(HALF_CARRY_FLAG);
+
+	if (reg_value < value)
+		SET_FLAG(CARRY_FLAG);
+	else
+		CLEAR_FLAG(CARRY_FLAG);
+}
 void Registers::increment_register(const Register& r)
 {
 	byte result = get_register(r) + 1;
@@ -245,6 +276,12 @@ void Registers::complement_carry_flag()
 	SET_FLAG(~GET_FLAG(CARRY_FLAG));
 }
 
+void Registers::set_carry_flag()
+{
+	CLEAR_FLAG(SUB_FLAG);
+	CLEAR_FLAG(HALF_CARRY_FLAG);
+	SET_FLAG(CARRY_FLAG);
+}
 
 word Registers::get_stack_pointer() const
 {

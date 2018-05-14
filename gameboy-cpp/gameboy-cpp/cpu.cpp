@@ -48,6 +48,9 @@ void CPU::cycle()
 		// m_registers.
 
 		break;
+	case 0x37: // SCF
+		m_registers.set_carry_flag();
+		m_registers.increment_clock_cycles(4, 1);
 	case 0x3F: // CCF
 		m_registers.complement_carry_flag();
 		m_registers.increment_clock_cycles(4, 1);
@@ -64,6 +67,11 @@ void CPU::cycle()
 		src = m_registers.get_register(static_cast<Register>(opcode & 0x7));
 		m_registers.set_register(dst, src);
 		m_registers.increment_clock_cycles(4, 1);
+		break;
+
+		// LOAD REG, (HL)
+	case 0x46: case 0x4E: case 0x56: case 0x5E: case 0x66: case 0x6E: case 0x7E:
+		
 		break;
 	case 0x80:	case 0x81:	case 0x82:	case 0x83:	case 0x84:	case 0x85:	case 0x87:	// ADD A, <reg>
 	case 0x88:	case 0x89:	case 0x8A:	case 0x8B:	case 0x8C:	case 0x8D:	case 0x8F:	// ADC A, <reg>
@@ -102,9 +110,14 @@ void CPU::cycle()
 		m_registers.register_bitwise_or(dst, src);
 		m_registers.increment_clock_cycles(4, 1);
 		break;
-		// CP A, <reg>
-	case 0xB8:	case 0xB9:	case 0xBA:	case 0xBB:	case 0xBC:	case 0xBD:	case 0xBF:	// missing 0xBE
+
+	case 0xB8:	case 0xB9:	case 0xBA:	case 0xBB:	case 0xBC:	case 0xBD:	case 0xBF:	// CP A, <reg>
+		dst = static_cast<Register>(opcode >> 3 & 0x7);
+		src = m_registers.get_register(static_cast<Register>(opcode & 0x7));
+		m_registers.register_compare(dst, src);
+		m_registers.increment_clock_cycles(4, 1);
 		break;
+
 	case 0xC0: break;
 	case 0xD0: break;
 	case 0xE0: break;
