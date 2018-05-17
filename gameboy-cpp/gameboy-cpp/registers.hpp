@@ -48,7 +48,7 @@ public:
 
 	inline void set_half_carry_flag(const byte& reg_value, const byte& value, const byte& carry)
 	{
-		if ((int)(reg_value & 0x0F) + (int)(value & 0x0F) + (int)carry > 0x0F) F |= HALF_CARRY_FLAG;
+		if ((int)(reg_value & 0x0F) + (int)(value & 0x0F) + (int)carry > 0x0F) SET_FLAG(HALF_CARRY_FLAG);
 		else CLEAR_FLAG(HALF_CARRY_FLAG);
 	}
 
