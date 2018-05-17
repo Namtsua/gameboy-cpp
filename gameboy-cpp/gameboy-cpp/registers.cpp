@@ -7,8 +7,9 @@ void Registers::initialize()
 	for (int i = 0; i < REGISTER_COUNT; ++i)
 		set_register(static_cast<Register>(i), 0x0); // Reset all registers
 
-	set_stack_pointer(0xFFFE); // Reset stack pointer
-	set_program_counter(0x100); // Reset program counter
+	//set_stack_pointer(0xFFFE); // Reset stack pointer
+	set_stack_pointer(0x00);
+	set_program_counter(0x00); // Reset program counter
 	m = 0; // Reset machine cycle clock
 	t = 0; // Reset tick cycle clock
 	AF.upper_register = &A;

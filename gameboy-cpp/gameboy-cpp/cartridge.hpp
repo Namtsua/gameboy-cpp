@@ -1,14 +1,14 @@
 #pragma once
 #include "common.hpp"
+#include "mmu.hpp"
 
 using namespace std;
 
 class Cartridge
 {
-	Cartridge(const string& file_path);
+public:
+	Cartridge(MMU* mmu);
 	~Cartridge();
-	bool load();
-
-private:
-	const char* rom_path;
+	bool load(const string& rom);
+	MMU* m_mmu;
 };

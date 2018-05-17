@@ -1,8 +1,6 @@
 #pragma once
 #include "common.hpp"
-#define bank_0_size 0x4000
-#define other_bank_size 0x4000
-#define bank_size 0x4000
+#define bank_size 0x8000
 #define graphics_ram_size 0x2000
 #define external_ram_size 0x2000
 #define working_ram_size 0x2000
@@ -17,7 +15,9 @@ class MMU
 public:
 	MMU();
 	~MMU();
-	byte read_memory(const word& address);
+	byte read_memory(const word& address) const;
+	void write_memory(const word& address, const byte& value);
+	byte* get_rom_space();
 	
 
 
@@ -25,8 +25,7 @@ public:
 	{
 		for (int i = 0; i < bank_size; ++i)
 		{
-			cartridge_bank_0[i] = 0x0;
-			cartridge_other_banks[i] = 0x0;
+			cartridge_bank[i] = 0x0;
 		}
 
 		for (int i = 0; i < ram_size; ++i)
@@ -50,8 +49,7 @@ public:
 	}
 
 private:
-	byte cartridge_bank_0[bank_0_size];
-	byte cartridge_other_banks[other_bank_size];
+	byte cartridge_bank[bank_size];
 	byte graphics_ram[graphics_ram_size];
 	byte cartridge_external_ram[external_ram_size];
 	byte working_ram[working_ram_size];

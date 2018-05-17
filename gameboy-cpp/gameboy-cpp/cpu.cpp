@@ -7,9 +7,10 @@
 //#define XOR_REG_REG(dst,src) m_registers.register_bitwise_xor(dst, m_registers.get_register(src)); m_registers.increment_clock_cycles(4,1)
 //#define OR_REG_REG(dst,src) m_registers.register_bitwise_or(dst, m_registers.get_register(src)); m_registers.increment_clock_cycles(4,1)
 
-CPU::CPU()
+CPU::CPU(MMU* mmu)
 {
 	m_registers.initialize();
+	m_mmu = mmu;
 }
 
 CPU::~CPU() {}
@@ -21,7 +22,7 @@ void CPU::cycle()
 	byte src;
 	bool carry = false;
 
-	switch (opcode)
+	switch (opcode & 0xF0)
 	{
 		// NOP
 	case 0x00:
@@ -134,5 +135,5 @@ void CPU::cycle()
 
 word CPU::decode()
 {
-	return 0x00;
+	return m_mmu->read_memory(m_registers.get_program_counter());
 }

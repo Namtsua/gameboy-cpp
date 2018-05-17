@@ -1,13 +1,13 @@
 #include "cartridge.hpp"
 
-Cartridge::Cartridge(const string& file_path)
+Cartridge::Cartridge(MMU* mmu)
 {
-	rom_path = file_path.c_str();
+	m_mmu = mmu;
 }
 
-bool Cartridge::load()
+bool Cartridge::load(const string& rom)
 {
-	ifstream in_file(rom_path, ios::in | ios::binary);
+	ifstream in_file(rom, ios::in | ios::binary);
 	if (!in_file.is_open())
 	{
 		fprintf(stderr, "Failed to open ROM file\n");
@@ -17,7 +17,8 @@ bool Cartridge::load()
 	in_file.seekg(0, in_file.end); // go to end of file
 	int length = in_file.tellg(); // get file size
 	in_file.seekg(0, in_file.beg); // go back to beginning of file
-	//in_file.read((char *)&m_cpu.memory[Constants::PROGRAM_START], length); // read program into memory
+	byte* rom_space = m_mmu->get_rom_space();
+	in_file.read((char *)rom_space, length); // read program into memory
 	in_file.close();
 
 	return true;
