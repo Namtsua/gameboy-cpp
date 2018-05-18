@@ -314,6 +314,11 @@ void Registers::set_program_counter(const word& value)
 	PC = value;
 }
 
+void Registers::advance_program_counter(const word& value)
+{
+	PC += value;
+}
+
 void Registers::increment_clock_cycles(const byte& t_val, const byte& m_val)
 {
 	t += t_val;

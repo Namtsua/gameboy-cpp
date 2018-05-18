@@ -8,7 +8,7 @@ public:
 	CPU(MMU* mmu);
 	~CPU();
 	void cycle();
-	word decode();
+	word decode(const word& pc);
 
 
 private:

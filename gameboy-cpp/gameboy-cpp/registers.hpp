@@ -31,6 +31,7 @@ public:
 	void set_carry_flag();
 	word get_program_counter() const;
 	void set_program_counter(const word& value);
+	void advance_program_counter(const word& value);
 	void increment_register(const Register& r);
 	void decrement_register(const Register& r);
 	void increment_clock_cycles(const byte& t_val, const byte& m_val);

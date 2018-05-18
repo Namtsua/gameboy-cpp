@@ -17,22 +17,27 @@ CPU::~CPU() {}
 
 void CPU::cycle()
 {
-	const word& opcode = decode();
 	Register dst;
 	byte src;
 	bool carry = false;
+	word pc_step = 0x00;
+	byte immediate = 0x00;
+	const word& pc = m_registers.get_program_counter();
+	const word& opcode = decode(pc);
 
 	switch (opcode & 0xF0)
 	{
 		// NOP
 	case 0x00:
 		m_registers.increment_clock_cycles(4, 1);
+		pc_step += 1;
 		break;
 	case 0x10: break;
 	case 0x20: break;
 	case 0x2F: // CPL
 		m_registers.complement_register_A();
 		m_registers.increment_clock_cycles(4, 1);
+		pc_step += 1;
 		break;
 	case 0x30: break;
 		// INC (8-bit)
@@ -40,21 +45,26 @@ void CPU::cycle()
 		dst = static_cast<Register>(opcode >> 3 & 0x7);
 		m_registers.increment_register(dst);
 		m_registers.increment_clock_cycles(4, 1);
+		pc_step += 1;
 		break;
 
 		// LOAD REG, IMMEDIATE
 	case 0x06: case 0x0E: case 0x16: case 0x1E: case 0x26: case 0x2E: case 0x3E:
 		dst = static_cast<Register>(opcode >> 3 & 0x7);
-		// const byte& value = memory[pc + 1];
-		// m_registers.
-
+		immediate = m_mmu->read_memory(pc + 1);
+		m_registers.set_register(dst, immediate);
+		m_registers.increment_clock_cycles(8, 2);
+		pc_step += 2;
 		break;
 	case 0x37: // SCF
 		m_registers.set_carry_flag();
 		m_registers.increment_clock_cycles(4, 1);
+		pc_step += 1;
+		break;
 	case 0x3F: // CCF
 		m_registers.complement_carry_flag();
 		m_registers.increment_clock_cycles(4, 1);
+		pc_step += 1;
 		break;
 		// LOAD REG, REG
 	case 0x40:	case 0x41:	case 0x42:	case 0x43:	case 0x44:	case 0x45:	case 0x47:	// LD B, <reg>
@@ -68,6 +78,7 @@ void CPU::cycle()
 		src = m_registers.get_register(static_cast<Register>(opcode & 0x7));
 		m_registers.set_register(dst, src);
 		m_registers.increment_clock_cycles(4, 1);
+		pc_step += 1;
 		break;
 
 		// LOAD REG, (HL)
@@ -77,53 +88,104 @@ void CPU::cycle()
 	case 0x80:	case 0x81:	case 0x82:	case 0x83:	case 0x84:	case 0x85:	case 0x87:	// ADD A, <reg>
 	case 0x88:	case 0x89:	case 0x8A:	case 0x8B:	case 0x8C:	case 0x8D:	case 0x8F:	// ADC A, <reg>
 		carry = opcode & 0x8; // if true, handle carry
-		dst = static_cast<Register>(opcode >> 3 & 0x7);
+		dst = R_A;
 		src = m_registers.get_register(static_cast<Register>(opcode & 0x7));
 		m_registers.register_addition(dst, src, carry);
 		m_registers.increment_clock_cycles(4, 1);
+		pc_step += 1;
 		break;
 	case 0x90:	case 0x91:	case 0x92:	case 0x93:	case 0x94:	case 0x95:	case 0x97:	// SUB A, <reg>
 	case 0x98:	case 0x99:	case 0x9A:	case 0x9B:	case 0x9C:	case 0x9D:	case 0x9F:	// SBC A, <reg>
 		carry = opcode & 0x8; // if true, handle carry
-		dst = static_cast<Register>(opcode >> 3 & 0x7);
+		dst = R_A;
 		src = m_registers.get_register(static_cast<Register>(opcode & 0x7));
-		m_registers.register_subtraction(dst, src);
+		m_registers.register_subtraction(dst, src, carry);
 		m_registers.increment_clock_cycles(4, 1);
+		pc_step += 1;
 		break;
 	case 0xA0:	case 0xA1:	case 0xA2:	case 0xA3:	case 0xA4:	case 0xA5:	case 0xA7:	// AND A, <reg>
 		// handle flags
-		dst = static_cast<Register>(opcode >> 3 & 0x7);
+		dst = R_A;
 		src = m_registers.get_register(static_cast<Register>(opcode & 0x7));
 		m_registers.register_bitwise_and(dst, src);
 		m_registers.increment_clock_cycles(4, 1);
+		pc_step += 1;
 		break;
 	case 0xA8:	case 0xA9:	case 0xAA:	case 0xAB:	case 0xAC:	case 0xAD:	case 0xAF:	// XOR A, <reg>
 		// handle flags
-		dst = static_cast<Register>(opcode >> 3 & 0x7);
+		dst = R_A;
 		src = m_registers.get_register(static_cast<Register>(opcode & 0x7));
 		m_registers.register_bitwise_xor(dst, src);
 		m_registers.increment_clock_cycles(4, 1);
+		pc_step += 1;
 		break;
 	case 0xB0:	case 0xB1:	case 0xB2:	case 0xB3:	case 0xB4:	case 0xB5:	case 0xB7:	// OR A, <reg>
 		// handle flags
-		dst = static_cast<Register>(opcode >> 3 & 0x7);
+		dst = R_A;
 		src = m_registers.get_register(static_cast<Register>(opcode & 0x7));
 		m_registers.register_bitwise_or(dst, src);
 		m_registers.increment_clock_cycles(4, 1);
+		pc_step += 1;
 		break;
 
 	case 0xB8:	case 0xB9:	case 0xBA:	case 0xBB:	case 0xBC:	case 0xBD:	case 0xBF:	// CP A, <reg>
-		dst = static_cast<Register>(opcode >> 3 & 0x7);
+		dst = R_A;
 		src = m_registers.get_register(static_cast<Register>(opcode & 0x7));
 		m_registers.register_compare(dst, src);
 		m_registers.increment_clock_cycles(4, 1);
+		pc_step += 1;
 		break;
 
 	case 0xC0: break;
+	case 0xC6: case 0xCE:	// ADD A, <u8> + ADC A, <u8>
+		carry = opcode & 0x8; // if true, handle carry
+		dst = R_A;
+		immediate = m_mmu->read_memory(pc + 1);
+		m_registers.register_addition(dst, immediate, carry);
+		m_registers.increment_clock_cycles(8, 2);
+		pc_step += 2;
+		break;
 	case 0xD0: break;
-	case 0xE0: break;
-	case 0xF0: break;
 
+	case 0xD6: case 0xDE:	// SUB A, <u8> + SBC A, <u8>
+		carry = opcode & 0x8; // if true, handle carry
+		dst = R_A;
+		immediate = m_mmu->read_memory(pc + 1);
+		m_registers.register_subtraction(dst, immediate, carry);
+		m_registers.increment_clock_cycles(8, 2);
+		pc_step += 2;
+		break;
+
+	case 0xE0: break;
+	case 0xE6:	// AND A, <u8>
+		dst = R_A;
+		immediate = m_mmu->read_memory(pc + 1);
+		m_registers.register_bitwise_and(dst, immediate);
+		m_registers.increment_clock_cycles(8, 2);
+		pc_step += 2;
+		break;
+	case 0xEE:	// XOR A, <u8>
+		dst = R_A;
+		immediate = m_mmu->read_memory(pc + 1);
+		m_registers.register_bitwise_xor(dst, immediate);
+		m_registers.increment_clock_cycles(8, 2);
+		pc_step += 2;
+		break;
+	case 0xF0: break;
+	case 0xF6:	// OR A, <u8>
+		dst = R_A;
+		immediate = m_mmu->read_memory(pc + 1);
+		m_registers.register_bitwise_or(dst, immediate);
+		m_registers.increment_clock_cycles(8, 2);
+		pc_step += 2;
+		break;
+	case 0xFE:	// CP A, <u8>
+		dst = R_A;
+		immediate = m_mmu->read_memory(pc + 1);
+		m_registers.register_compare(dst, immediate);
+		m_registers.increment_clock_cycles(8, 2);
+		pc_step += 2;
+		break;
 	case 0xD3: case 0xDB: case 0xDD:
 	case 0xE3: case 0xE4: case 0xEB: case 0xEC: case 0xED:
 	case 0xF4: case 0xFC: case 0xFD:
@@ -131,9 +193,11 @@ void CPU::cycle()
 		fprintf(stderr, "Invalid opcode!");
 		exit(1);
 	}
+
+	m_registers.advance_program_counter(pc_step);
 }
 
-word CPU::decode()
+word CPU::decode(const word& pc)
 {
-	return m_mmu->read_memory(m_registers.get_program_counter());
+	return m_mmu->read_memory(pc);
 }
