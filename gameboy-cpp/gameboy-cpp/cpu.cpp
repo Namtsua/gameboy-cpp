@@ -21,16 +21,32 @@ void CPU::cycle()
 	byte src;
 	bool carry = false;
 	word pc_step = 0x00;
-	byte immediate = 0x00;
+	byte immediate_u8  = 0x00;
+	word immediate_u16 = 0x0000;
+	Register lower_reg;
+	Register upper_reg;
 	const word& pc = m_registers.get_program_counter();
 	const word& opcode = decode(pc);
 
-	switch (opcode & 0xF0)
+	switch (opcode)
 	{
 		// NOP
 	case 0x00:
 		m_registers.increment_clock_cycles(4, 1);
 		pc_step += 1;
+		break;
+
+	case 0x01:	// LD BC, <u16>
+	case 0x11:	// LD DE, <u16>
+	case 0x21:	// LD HL, <u16>
+		upper_reg = static_cast<Register>(opcode >> 3 & 0x7);
+		immediate_u8 = m_mmu->read_memory(pc + 1);
+		m_registers.set_register(upper_reg, immediate_u8);
+		lower_reg = static_cast<Register>(upper_reg + 1);
+		immediate_u8 = m_mmu->read_memory(pc + 2);
+		m_registers.set_register(lower_reg, immediate_u8);
+		m_registers.increment_clock_cycles(12, 3);
+		pc_step += 3;
 		break;
 	case 0x10: break;
 	case 0x20: break;
@@ -39,7 +55,7 @@ void CPU::cycle()
 		m_registers.increment_clock_cycles(4, 1);
 		pc_step += 1;
 		break;
-	case 0x30: break;
+	//case 0x30: break;
 		// INC (8-bit)
 	case 0x04: case 0x0C: case 0x14: case 0x1C: case 0x24: case 0x2C: case 0x3C:
 		dst = static_cast<Register>(opcode >> 3 & 0x7);
@@ -51,10 +67,18 @@ void CPU::cycle()
 		// LOAD REG, IMMEDIATE
 	case 0x06: case 0x0E: case 0x16: case 0x1E: case 0x26: case 0x2E: case 0x3E:
 		dst = static_cast<Register>(opcode >> 3 & 0x7);
-		immediate = m_mmu->read_memory(pc + 1);
-		m_registers.set_register(dst, immediate);
+		immediate_u8 = m_mmu->read_memory(pc + 1);
+		m_registers.set_register(dst, immediate_u8);
 		m_registers.increment_clock_cycles(8, 2);
 		pc_step += 2;
+		break;
+	case 0x31: // LD SP, <u16>
+		immediate_u16 = m_mmu->read_memory(pc + 2);
+		immediate_u16 <<= 8;
+		immediate_u16 |= m_mmu->read_memory(pc + 1);
+		m_registers.set_stack_pointer(immediate_u16);
+		m_registers.increment_clock_cycles(12, 3);
+		pc_step += 3;
 		break;
 	case 0x37: // SCF
 		m_registers.set_carry_flag();
@@ -140,8 +164,8 @@ void CPU::cycle()
 	case 0xC6: case 0xCE:	// ADD A, <u8> + ADC A, <u8>
 		carry = opcode & 0x8; // if true, handle carry
 		dst = R_A;
-		immediate = m_mmu->read_memory(pc + 1);
-		m_registers.register_addition(dst, immediate, carry);
+		immediate_u8 = m_mmu->read_memory(pc + 1);
+		m_registers.register_addition(dst, immediate_u8, carry);
 		m_registers.increment_clock_cycles(8, 2);
 		pc_step += 2;
 		break;
@@ -150,8 +174,8 @@ void CPU::cycle()
 	case 0xD6: case 0xDE:	// SUB A, <u8> + SBC A, <u8>
 		carry = opcode & 0x8; // if true, handle carry
 		dst = R_A;
-		immediate = m_mmu->read_memory(pc + 1);
-		m_registers.register_subtraction(dst, immediate, carry);
+		immediate_u8 = m_mmu->read_memory(pc + 1);
+		m_registers.register_subtraction(dst, immediate_u8, carry);
 		m_registers.increment_clock_cycles(8, 2);
 		pc_step += 2;
 		break;
@@ -159,30 +183,30 @@ void CPU::cycle()
 	case 0xE0: break;
 	case 0xE6:	// AND A, <u8>
 		dst = R_A;
-		immediate = m_mmu->read_memory(pc + 1);
-		m_registers.register_bitwise_and(dst, immediate);
+		immediate_u8 = m_mmu->read_memory(pc + 1);
+		m_registers.register_bitwise_and(dst, immediate_u8);
 		m_registers.increment_clock_cycles(8, 2);
 		pc_step += 2;
 		break;
 	case 0xEE:	// XOR A, <u8>
 		dst = R_A;
-		immediate = m_mmu->read_memory(pc + 1);
-		m_registers.register_bitwise_xor(dst, immediate);
+		immediate_u8 = m_mmu->read_memory(pc + 1);
+		m_registers.register_bitwise_xor(dst, immediate_u8);
 		m_registers.increment_clock_cycles(8, 2);
 		pc_step += 2;
 		break;
 	case 0xF0: break;
 	case 0xF6:	// OR A, <u8>
 		dst = R_A;
-		immediate = m_mmu->read_memory(pc + 1);
-		m_registers.register_bitwise_or(dst, immediate);
+		immediate_u8 = m_mmu->read_memory(pc + 1);
+		m_registers.register_bitwise_or(dst, immediate_u8);
 		m_registers.increment_clock_cycles(8, 2);
 		pc_step += 2;
 		break;
 	case 0xFE:	// CP A, <u8>
 		dst = R_A;
-		immediate = m_mmu->read_memory(pc + 1);
-		m_registers.register_compare(dst, immediate);
+		immediate_u8 = m_mmu->read_memory(pc + 1);
+		m_registers.register_compare(dst, immediate_u8);
 		m_registers.increment_clock_cycles(8, 2);
 		pc_step += 2;
 		break;
