@@ -14,7 +14,9 @@ class Registers
 public:
 	void initialize();
 	void set_register(const Register& r, const byte& value);
+	void set_register(const CombinedRegister& r, const word& value);
 	byte get_register(const Register& r) const;
+	word get_register(const CombinedRegister& r) const;
 	void register_addition(const Register &r, const byte& value, const bool& carry = false);
 	void register_subtraction(const Register &r, const byte& value, const bool& carry = false);
 	void register_multiplication(const Register &r, const byte& value);
@@ -75,10 +77,6 @@ private:
 	word PC;
 	byte m;
 	byte t;
-	combined_register AF;
-	combined_register BC;
-	combined_register DE;
-	combined_register HL;
 
 };
 

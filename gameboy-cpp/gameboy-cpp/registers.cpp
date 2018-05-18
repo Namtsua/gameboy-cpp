@@ -12,14 +12,6 @@ void Registers::initialize()
 	set_program_counter(0x00); // Reset program counter
 	m = 0; // Reset machine cycle clock
 	t = 0; // Reset tick cycle clock
-	AF.upper_register = &A;
-	AF.lower_register = &F;
-	BC.upper_register = &B;
-	BC.lower_register = &C;
-	DE.upper_register = &D;
-	DE.lower_register = &E;
-	HL.upper_register = &H;
-	HL.lower_register = &L;
 }
 
 void Registers::set_register(const Register& r, const byte& value)
@@ -40,6 +32,20 @@ void Registers::set_register(const Register& r, const byte& value)
 	}
 }
 
+void Registers::set_register(const CombinedRegister& r, const word& value)
+{
+	switch (r)
+	{
+	case R_BC:	B = value & 0xFF00; C = value & 0x00FF; break;
+	case R_DE:	D = value & 0xFF00; C = value & 0x00FF; break;
+	case R_HL:	H = value & 0xFF00; L = value & 0x00FF; break;
+	case R_AF:	A = value & 0xFF00; F = value & 0x00FF; break;
+	default:
+		fprintf(stderr, "Unknown combined register specified");
+		exit(1);
+	}
+}
+
 byte Registers::get_register(const Register& r) const
 {
 	switch (r)
@@ -54,6 +60,20 @@ byte Registers::get_register(const Register& r) const
 	case R_L: return L;
 	default:
 		fprintf(stderr, "Unknown register specified");
+		exit(1);
+	}
+}
+
+word Registers::get_register(const CombinedRegister& r) const
+{
+	switch (r)
+	{
+	case R_BC:	return get_register(R_B) << 8 | get_register(R_C);
+	case R_DE:	return get_register(R_D) << 8 | get_register(R_E);
+	case R_HL:	return get_register(R_H) << 8 | get_register(R_L);
+	case R_AF:	return get_register(R_A) << 8 | get_register(R_F);
+	default:
+		fprintf(stderr, "Unknown combined register specified");
 		exit(1);
 	}
 }
@@ -246,6 +266,12 @@ void Registers::increment_register(const Register& r)
 	CLEAR_FLAG(SUB_FLAG);
 	set_register(r, result);
 }
+//
+//void Registers::increment_register(const CombinedRegister& r)
+//{
+//
+//}
+
 void Registers::decrement_register(const Register& r)
 {
 	byte result = get_register(r) - 1;

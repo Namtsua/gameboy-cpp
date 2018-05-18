@@ -21,6 +21,14 @@ enum Register
 	R_A,
 };
 
+enum CombinedRegister
+{
+	R_BC,
+	R_DE,
+	R_HL,
+	R_AF,
+};
+
 namespace Contants
 {
 	const int REGISTER_COUNT = 8;
