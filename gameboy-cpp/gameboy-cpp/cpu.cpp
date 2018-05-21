@@ -60,6 +60,15 @@ void CPU::cycle()
 		pc_step += 2;
 		break;
 
+		// ADD HL, SP
+	case 0x39:
+		cr_dst = R_HL;
+		cr_src = m_registers.get_program_counter();
+		// m_registers.register_addition(cr_dst, cr_src);
+		m_registers.increment_clock_cycles(8, 2);
+		pc_step += 2;
+		break;
+
 		// INC <CReg>
 	case 0x03:	// INC BC	
 	case 0x13:	// INC DE
@@ -81,7 +90,7 @@ void CPU::cycle()
 		break;
 
 		// STOP
-	case 0x10:	// STOP	NEED TO ACTUALLY STOP STUFF
+	case 0x10:	// STOP	NEEDS TO ACTUALLY STOP STUFF
 		m_registers.increment_clock_cycles(4, 1);
 		pc_step += 2;
 		break;
@@ -100,12 +109,27 @@ void CPU::cycle()
 		m_registers.increment_clock_cycles(4, 1);
 		pc_step += 1;
 		break;
+			// INC (HL)
+	case 0x34:
+		cr_dst = R_HL;
+		m_registers.increment_register(cr_dst);
+		m_registers.increment_clock_cycles(12, 3);
+		pc_step += 1;
+		break;
 
 			// DEC (8-bit)
 	case 0x05: case 0x0D: case 0x15: case 0x1D: case 0x25: case 0x2D: case 0x3D:
 		dst = static_cast<Register>(opcode >> 3 & 0x7);
 		m_registers.decrement_register(dst);
 		m_registers.increment_clock_cycles(4, 1);
+		pc_step += 1;
+		break;
+
+			// DEC (HL)
+	case 0x35:
+		cr_dst = R_HL;
+		m_registers.decrement_register(cr_dst);
+		m_registers.increment_clock_cycles(12, 3);
 		pc_step += 1;
 		break;
 
@@ -129,6 +153,13 @@ void CPU::cycle()
 		m_registers.increment_clock_cycles(8, 2);
 		pc_step += 1;
 		break;
+
+	case 0x36:	// LD (HL), u8
+		immediate_u8 = m_mmu->read_memory(pc + 1);
+		immediate_u16 = m_registers.get_register(R_HL);
+		m_mmu->write_memory(immediate_u16, immediate_u8);
+		m_registers.increment_clock_cycles(12, 3);
+		pc_step += 2;
 
 	case 0x37: // SCF
 		m_registers.set_carry_flag();
@@ -192,7 +223,15 @@ void CPU::cycle()
 		pc_step += 1;
 		break;
 
-
+	case 0x86:	// ADD A, (HL)
+	case 0x8E:	// ADC A, (HL)
+		carry = opcode & 0x8;
+		dst = R_A;
+		src = m_mmu->read_memory(m_registers.get_register(R_HL));
+		m_registers.register_addition(dst, src, carry);
+		m_registers.increment_clock_cycles(8, 2);
+		pc_step += 1;
+		break;
 
 	case 0x90:	case 0x91:	case 0x92:	case 0x93:	case 0x94:	case 0x95:	case 0x97:	// SUB A, <reg>
 	case 0x98:	case 0x99:	case 0x9A:	case 0x9B:	case 0x9C:	case 0x9D:	case 0x9F:	// SBC A, <reg>
@@ -204,6 +243,15 @@ void CPU::cycle()
 		pc_step += 1;
 		break;
 
+	case 0x96:	// SUB A, (HL)
+	case 0x9E:	// SBC A, (HL)
+		carry = opcode & 0x8;
+		dst = R_A;
+		src = m_mmu->read_memory(m_registers.get_register(R_HL));
+		m_registers.register_subtraction(dst, src, carry);
+		m_registers.increment_clock_cycles(8, 2);
+		pc_step += 1;
+		break;
 	
 	case 0xA0:	case 0xA1:	case 0xA2:	case 0xA3:	case 0xA4:	case 0xA5:	case 0xA7:	// AND A, <reg>
 		// handle flags
@@ -213,6 +261,16 @@ void CPU::cycle()
 		m_registers.increment_clock_cycles(4, 1);
 		pc_step += 1;
 		break;
+
+		// AND A, (HL)
+	case 0xA6:
+		dst = R_A;
+		src = m_mmu->read_memory(m_registers.get_register(R_HL));
+		m_registers.register_bitwise_and(dst, src);
+		m_registers.increment_clock_cycles(8, 2);
+		pc_step += 1;
+		break;
+
 	case 0xA8:	case 0xA9:	case 0xAA:	case 0xAB:	case 0xAC:	case 0xAD:	case 0xAF:	// XOR A, <reg>
 		// handle flags
 		dst = R_A;
@@ -221,6 +279,16 @@ void CPU::cycle()
 		m_registers.increment_clock_cycles(4, 1);
 		pc_step += 1;
 		break;
+
+		// XOR A, (HL)
+	case 0xAE:
+		dst = R_A;
+		src = m_mmu->read_memory(m_registers.get_register(R_HL));
+		m_registers.register_bitwise_xor(dst, src);
+		m_registers.increment_clock_cycles(8, 2);
+		pc_step += 1;
+		break;
+
 	case 0xB0:	case 0xB1:	case 0xB2:	case 0xB3:	case 0xB4:	case 0xB5:	case 0xB7:	// OR A, <reg>
 		// handle flags
 		dst = R_A;
@@ -230,11 +298,29 @@ void CPU::cycle()
 		pc_step += 1;
 		break;
 
+		// OR A, (HL)
+	case 0xB6:
+		dst = R_A;
+		src = m_mmu->read_memory(m_registers.get_register(R_HL));
+		m_registers.register_bitwise_or(dst, src);
+		m_registers.increment_clock_cycles(8, 2);
+		pc_step += 1;
+		break;
+
 	case 0xB8:	case 0xB9:	case 0xBA:	case 0xBB:	case 0xBC:	case 0xBD:	case 0xBF:	// CP A, <reg>
 		dst = R_A;
 		src = m_registers.get_register(static_cast<Register>(opcode & 0x7));
 		m_registers.register_compare(dst, src);
 		m_registers.increment_clock_cycles(4, 1);
+		pc_step += 1;
+		break;
+
+		// CP A, (HL)
+	case 0xBE:
+		dst = R_A;
+		src = m_mmu->read_memory(m_registers.get_register(R_HL));
+		m_registers.register_compare(dst, src);
+		m_registers.increment_clock_cycles(8, 2);
 		pc_step += 1;
 		break;
 
