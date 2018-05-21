@@ -69,6 +69,11 @@ byte MMU::read_memory(const word& address) const
 	}
 }
 
+word MMU::read_memory_u16(const word& address) const
+{
+	return read_memory(address) << 8 | read_memory(address + 1);
+}
+
 void MMU::write_memory(const word& address, const byte& value)
 {
 	switch (address & 0xF000)
@@ -129,6 +134,12 @@ void MMU::write_memory(const word& address, const byte& value)
 		fprintf(stderr, "Unknown memory address!");
 		exit(1);
 	}
+}
+
+void MMU::write_memory_u16(const word& address, const word& value)
+{
+	write_memory(address, value >> 8);
+	write_memory(address + 1, value & 0xFF);
 }
 
 byte* MMU::get_rom_space()

@@ -16,7 +16,9 @@ public:
 	MMU();
 	~MMU();
 	byte read_memory(const word& address) const;
+	word read_memory_u16(const word& address) const;
 	void write_memory(const word& address, const byte& value);
+	void write_memory_u16(const word& address, const word& value);
 	byte* get_rom_space();
 	
 
