@@ -266,11 +266,12 @@ void Registers::increment_register(const Register& r)
 	CLEAR_FLAG(SUB_FLAG);
 	set_register(r, result);
 }
-//
-//void Registers::increment_register(const CombinedRegister& r)
-//{
-//
-//}
+
+void Registers::increment_register(const CombinedRegister& r)
+{
+	word result = get_register(r);
+	set_register(r, result + 1);
+}
 
 void Registers::decrement_register(const Register& r)
 {
@@ -288,6 +289,12 @@ void Registers::decrement_register(const Register& r)
 
 	SET_FLAG(SUB_FLAG);
 	set_register(r, result);
+}
+
+void Registers::decrement_register(const CombinedRegister& r)
+{
+	word result = get_register(r);
+	set_register(r, result - 1);
 }
 
 void Registers::complement_register_A()

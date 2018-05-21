@@ -35,7 +35,9 @@ public:
 	void set_program_counter(const word& value);
 	void advance_program_counter(const word& value);
 	void increment_register(const Register& r);
+	void increment_register(const CombinedRegister& r);
 	void decrement_register(const Register& r);
+	void decrement_register(const CombinedRegister& r);
 	void increment_clock_cycles(const byte& t_val, const byte& m_val);
 
 	/*inline void set_zero_flag(const byte& reg)
