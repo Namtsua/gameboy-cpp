@@ -250,6 +250,108 @@ void Registers::register_compare(const Register &r, const byte& value)
 	else
 		CLEAR_FLAG(CARRY_FLAG);
 }
+
+void Registers::register_rotate_left(const Register& r, const byte& value)
+{
+	byte result = value;
+	const byte& carry = value & 0x80 ? 1 : 0;
+	result <<= 1;
+	
+	if (carry)
+	{
+		SET_FLAG(CARRY_FLAG);
+		result |= 0x1;
+	}
+	else
+		CLEAR_FLAG(CARRY_FLAG);
+
+	if (result == 0x00)
+		SET_FLAG(ZERO_FLAG);
+	else
+		CLEAR_FLAG(ZERO_FLAG);
+
+	CLEAR_FLAG(SUB_FLAG);
+	CLEAR_FLAG(HALF_CARRY_FLAG);
+	set_register(r, result);
+}
+
+void Registers::register_rotate_left_carry(const Register& r, const byte& value)
+{
+	byte result = value;
+	const byte& old_carry = GET_FLAG(CARRY_FLAG);
+	const byte& carry = value & 0x80 ? SET_FLAG(CARRY_FLAG) : CLEAR_FLAG(CARRY_FLAG);
+	
+	// Shift left
+	result <<= 1;
+	
+	// Replace lowest bit by old carry value
+	if (old_carry) result |= 0x1;
+
+	if (result == 0x00)
+		SET_FLAG(ZERO_FLAG);
+	else
+		CLEAR_FLAG(ZERO_FLAG);
+
+	CLEAR_FLAG(SUB_FLAG);
+	CLEAR_FLAG(HALF_CARRY_FLAG);
+	set_register(r, result);
+}
+
+void Registers::register_rotate_right(const Register& r, const byte& value)
+{
+	byte result = value;
+	const byte& carry = value & 0x1 ? 1 : 0;
+	result >>= 1;
+
+	if (carry)
+	{
+		SET_FLAG(CARRY_FLAG);
+		result |= 0x80;
+	}
+	else
+		CLEAR_FLAG(CARRY_FLAG);
+
+	if (result == 0x00)
+		SET_FLAG(ZERO_FLAG);
+	else
+		CLEAR_FLAG(ZERO_FLAG);
+
+	CLEAR_FLAG(SUB_FLAG);
+	CLEAR_FLAG(HALF_CARRY_FLAG);
+	set_register(r, result);
+}
+
+void Registers::register_rotate_right_carry(const Register& r, const byte& value)
+{
+
+	byte result = value;
+	const byte& old_carry = GET_FLAG(CARRY_FLAG);
+	const byte& carry = value & 0x1 ? SET_FLAG(CARRY_FLAG) : CLEAR_FLAG(CARRY_FLAG);
+
+	// Shift right
+	result >>= 1;
+
+	// Replace highest bit by old carry value
+	if (old_carry) result |= 0x80;
+
+	if (carry)
+	{
+		SET_FLAG(CARRY_FLAG);
+		result |= 0x80;
+	}
+	else
+		CLEAR_FLAG(CARRY_FLAG);
+
+	if (result == 0x00)
+		SET_FLAG(ZERO_FLAG);
+	else
+		CLEAR_FLAG(ZERO_FLAG);
+
+	CLEAR_FLAG(SUB_FLAG);
+	CLEAR_FLAG(HALF_CARRY_FLAG);
+	set_register(r, result);
+}
+
 void Registers::increment_register(const Register& r)
 {
 	byte result = get_register(r) + 1;
@@ -339,7 +441,7 @@ void Registers::decrement_stack_pointer()
 
 bool Registers::get_flag(const byte& flag) const
 {
-	return GET_FLAG(flag) != 0x0;
+	return (GET_FLAG(flag)) != 0x0;
 }
 
 word Registers::get_program_counter() const

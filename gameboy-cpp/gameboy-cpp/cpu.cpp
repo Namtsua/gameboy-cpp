@@ -62,6 +62,14 @@ void CPU::cycle()
 		pc_step += 1;
 		break;
 
+		// RCLA
+	case 0x07:
+		src = m_registers.get_register(R_A);
+		m_registers.register_rotate_left(R_A, src);
+		m_registers.increment_clock_cycles(4, 1);
+		pc_step += 1;
+		break;
+
 		// LD <u16>, SP
 	case 0x08:
 		immediate_u16 = m_mmu->read_memory(pc + 1) << 8 | m_mmu->read_memory(pc + 2);
@@ -144,10 +152,34 @@ void CPU::cycle()
 		pc_step += 1;
 		break;
 
+		// RRCA
+	case 0x0F:
+		src = m_registers.get_register(R_A);
+		m_registers.register_rotate_right(R_A, src);
+		m_registers.increment_clock_cycles(4, 1);
+		pc_step += 1;
+		break;
+
 		// STOP
 	case 0x10:	// STOP	NEEDS TO ACTUALLY STOP STUFF
 		m_registers.increment_clock_cycles(4, 1);
 		pc_step += 2;
+		break;
+	
+		// RLA
+	case 0x17:
+		src = m_registers.get_register(R_A);
+		m_registers.register_rotate_left_carry(R_A, src);
+		m_registers.increment_clock_cycles(4, 1);
+		pc_step += 1;
+		break;
+
+		// RRA
+	case 0x1F:
+		src = m_registers.get_register(R_A);
+		m_registers.register_rotate_right_carry(R_A, src);
+		m_registers.increment_clock_cycles(4, 1);
+		pc_step += 1;
 		break;
 
 		// LD (HL+), A
@@ -773,7 +805,8 @@ void CPU::cycle()
 		dst = R_A;
 		immediate_u8 = m_mmu->read_memory(pc + 1);
 		immediate_u16 = 0xFF00 + immediate_u8;
-		m_registers.set_register(dst, immediate_u16);
+		src = m_mmu->read_memory(immediate_u16);
+		m_registers.set_register(dst, src);
 		m_registers.increment_clock_cycles(12, 3);
 		pc_step += 2;
 		break;
