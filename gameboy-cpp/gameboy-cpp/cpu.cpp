@@ -417,11 +417,11 @@ void CPU::cycle()
 		if (!m_registers.get_flag(ZERO_FLAG)) // jump if not zero
 		{
 			m_registers.set_program_counter(immediate_u16);
-			m_registers.increment_clock_cycles(12, 3);
+			m_registers.increment_clock_cycles(16, 4);
 		}
 		else
 		{
-			m_registers.increment_clock_cycles(16, 4);
+			m_registers.increment_clock_cycles(12, 3);
 			pc_step += 3;
 		}
 		break;
@@ -431,6 +431,23 @@ void CPU::cycle()
 		immediate_u16 = m_mmu->read_memory(pc + 1) << 8 | m_mmu->read_memory(pc + 2);
 		m_registers.set_program_counter(immediate_u16);
 		m_registers.increment_clock_cycles(16, 4);
+		break;
+
+		// CALL NZ, <u16>
+	case 0xC4:
+		if (!m_registers.get_flag(ZERO_FLAG)) // Call if not zero
+		{
+			immediate_u16 = pc + 3; // next instruction
+			m_registers.set_stack_pointer(immediate_u16);
+			immediate_u16 = m_mmu->read_memory(pc + 1) << 8 | m_mmu->read_memory(pc + 2);
+			m_registers.set_program_counter(immediate_u16);
+			m_registers.increment_clock_cycles(24, 6);
+		}
+		else
+		{
+			m_registers.increment_clock_cycles(12, 3);
+			pc_step += 3;
+		}
 		break;
 
 		// PUSH <CReg>
@@ -458,13 +475,39 @@ void CPU::cycle()
 		if (m_registers.get_flag(ZERO_FLAG)) // jump if zero
 		{
 			m_registers.set_program_counter(immediate_u16);
-			m_registers.increment_clock_cycles(12, 3);
+			m_registers.increment_clock_cycles(16, 4);
 		}
 		else
 		{
-			m_registers.increment_clock_cycles(16, 4);
+			m_registers.increment_clock_cycles(12, 3);
 			pc_step += 3;
 		}
+		break;
+
+		// CALL Z, <u16>
+	case 0xCC:
+		if (m_registers.get_flag(ZERO_FLAG)) // Call if zero
+		{
+			immediate_u16 = pc + 3; // next instruction
+			m_registers.set_stack_pointer(immediate_u16);
+			immediate_u16 = m_mmu->read_memory(pc + 1) << 8 | m_mmu->read_memory(pc + 2);
+			m_registers.set_program_counter(immediate_u16);
+			m_registers.increment_clock_cycles(24, 6);
+		}
+		else
+		{
+			m_registers.increment_clock_cycles(12, 3);
+			pc_step += 3;
+		}
+		break;
+
+		// CALL <u16>
+	case 0xCD:
+		immediate_u16 = pc + 3; // next instruction
+		m_registers.set_stack_pointer(immediate_u16);
+		immediate_u16 = m_mmu->read_memory(pc + 1) << 8 | m_mmu->read_memory(pc + 2);
+		m_registers.set_program_counter(immediate_u16);
+		m_registers.increment_clock_cycles(24, 6);
 		break;
 
 		// JP NC, <u16>
@@ -473,11 +516,28 @@ void CPU::cycle()
 		if (!m_registers.get_flag(CARRY_FLAG)) // jump if no carry
 		{
 			m_registers.set_program_counter(immediate_u16);
-			m_registers.increment_clock_cycles(12, 3);
+			m_registers.increment_clock_cycles(16, 4);
 		}
 		else
 		{
-			m_registers.increment_clock_cycles(16, 4);
+			m_registers.increment_clock_cycles(12, 3);
+			pc_step += 3;
+		}
+		break;
+
+		// CALL NC, <u16>
+	case 0xD4:
+		if (!m_registers.get_flag(CARRY_FLAG)) // Call if no carry
+		{
+			immediate_u16 = pc + 3; // next instruction
+			m_registers.set_stack_pointer(immediate_u16);
+			immediate_u16 = m_mmu->read_memory(pc + 1) << 8 | m_mmu->read_memory(pc + 2);
+			m_registers.set_program_counter(immediate_u16);
+			m_registers.increment_clock_cycles(24, 6);
+		}
+		else
+		{
+			m_registers.increment_clock_cycles(12, 3);
 			pc_step += 3;
 		}
 		break;
@@ -497,14 +557,32 @@ void CPU::cycle()
 		if (m_registers.get_flag(CARRY_FLAG)) // jump if carry
 		{
 			m_registers.set_program_counter(immediate_u16);
-			m_registers.increment_clock_cycles(12, 3);
+			m_registers.increment_clock_cycles(16, 4);
 		}
 		else
 		{
-			m_registers.increment_clock_cycles(16, 4);
+			m_registers.increment_clock_cycles(12, 3);
 			pc_step += 3;
 		}
 		break;
+
+		// CALL C, <u16>
+	case 0xDC:
+		if (m_registers.get_flag(CARRY_FLAG)) // Call if carry
+		{
+			immediate_u16 = pc + 3; // next instruction
+			m_registers.set_stack_pointer(immediate_u16);
+			immediate_u16 = m_mmu->read_memory(pc + 1) << 8 | m_mmu->read_memory(pc + 2);
+			m_registers.set_program_counter(immediate_u16);
+			m_registers.increment_clock_cycles(24, 6);
+		}
+		else
+		{
+			m_registers.increment_clock_cycles(12, 3);
+			pc_step += 3;
+		}
+		break;
+
 
 	case 0xE0:	// LD (FF00 + <u8>), A
 		src = m_registers.get_register(R_A);
