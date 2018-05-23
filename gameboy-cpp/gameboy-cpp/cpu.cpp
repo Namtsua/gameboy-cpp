@@ -487,6 +487,16 @@ void CPU::cycle()
 		pc_step += 2;
 		break;
 
+		// RST 00h
+	case 0xC7:
+		m_mmu->write_memory(sp, pc >> 8);
+		m_registers.decrement_stack_pointer();
+		m_mmu->write_memory(sp, pc & 0xFF);
+		m_registers.decrement_stack_pointer();
+		m_registers.set_program_counter(0x0000);
+		m_registers.increment_clock_cycles(16, 4);
+		break;
+
 		// RET Z
 	case 0xC8:
 		if (m_registers.get_flag(ZERO_FLAG)) // return if zero
@@ -554,6 +564,16 @@ void CPU::cycle()
 		m_registers.increment_clock_cycles(24, 6);
 		break;
 
+		// RST 08h
+	case 0xCF:
+		m_mmu->write_memory(sp, pc >> 8);
+		m_registers.decrement_stack_pointer();
+		m_mmu->write_memory(sp, pc & 0xFF);
+		m_registers.decrement_stack_pointer();
+		m_registers.set_program_counter(0x0008);
+		m_registers.increment_clock_cycles(16, 4);
+		break;
+
 		// RET NC
 	case 0xD0:
 		if (!m_registers.get_flag(CARRY_FLAG)) // return if no carry
@@ -612,6 +632,16 @@ void CPU::cycle()
 		pc_step += 2;
 		break;
 
+		// RST 10h
+	case 0xD7:
+		m_mmu->write_memory(sp, pc >> 8);
+		m_registers.decrement_stack_pointer();
+		m_mmu->write_memory(sp, pc & 0xFF);
+		m_registers.decrement_stack_pointer();
+		m_registers.set_program_counter(0x0010);
+		m_registers.increment_clock_cycles(16, 4);
+		break;
+
 	case 0xD8:
 		if (m_registers.get_flag(CARRY_FLAG)) // return if carry
 		{
@@ -660,6 +690,15 @@ void CPU::cycle()
 		}
 		break;
 
+		// RST 18h
+	case 0xDF:
+		m_mmu->write_memory(sp, pc >> 8);
+		m_registers.decrement_stack_pointer();
+		m_mmu->write_memory(sp, pc & 0xFF);
+		m_registers.decrement_stack_pointer();
+		m_registers.set_program_counter(0x0018);
+		m_registers.increment_clock_cycles(16, 4);
+		break;
 
 	case 0xE0:	// LD (FF00 + <u8>), A
 		src = m_registers.get_register(R_A);
@@ -687,6 +726,16 @@ void CPU::cycle()
 		pc_step += 2;
 		break;
 
+		// RST 20h
+	case 0xE7:
+		m_mmu->write_memory(sp, pc >> 8);
+		m_registers.decrement_stack_pointer();
+		m_mmu->write_memory(sp, pc & 0xFF);
+		m_registers.decrement_stack_pointer();
+		m_registers.set_program_counter(0x0020);
+		m_registers.increment_clock_cycles(16, 4);
+		break;
+
 	case 0xE9:	// JP (HL)
 		immediate_u16 = m_registers.get_register(R_HL);
 		memory_value_u16 = m_mmu->read_memory_u16(immediate_u16);
@@ -708,6 +757,16 @@ void CPU::cycle()
 		m_registers.register_bitwise_xor(dst, immediate_u8);
 		m_registers.increment_clock_cycles(8, 2);
 		pc_step += 2;
+		break;
+
+		// RST 28h
+	case 0xEF:
+		m_mmu->write_memory(sp, pc >> 8);
+		m_registers.decrement_stack_pointer();
+		m_mmu->write_memory(sp, pc & 0xFF);
+		m_registers.decrement_stack_pointer();
+		m_registers.set_program_counter(0x0028);
+		m_registers.increment_clock_cycles(16, 4);
 		break;
 
 	case 0xF0:	// LD A, (FF00 + <u8>)
@@ -736,6 +795,16 @@ void CPU::cycle()
 		pc_step += 2;
 		break;
 
+		// RST 30h
+	case 0xF7:
+		m_mmu->write_memory(sp, pc >> 8);
+		m_registers.decrement_stack_pointer();
+		m_mmu->write_memory(sp, pc & 0xFF);
+		m_registers.decrement_stack_pointer();
+		m_registers.set_program_counter(0x0030);
+		m_registers.increment_clock_cycles(16, 4);
+		break;
+
 	case 0xF8:	// LD HL, SP + i8 need to handle unsigned
 		break;
 
@@ -762,7 +831,17 @@ void CPU::cycle()
 		pc_step += 2;
 		break;
 
-		// NOT INSTRUCTIONS
+		// RST 38h
+	case 0xFF:
+		m_mmu->write_memory(sp, pc >> 8);
+		m_registers.decrement_stack_pointer();
+		m_mmu->write_memory(sp, pc & 0xFF);
+		m_registers.decrement_stack_pointer();
+		m_registers.set_program_counter(0x0038);
+		m_registers.increment_clock_cycles(16, 4);
+		break;
+
+		// NOT VALID INSTRUCTIONS
 	case 0xD3: case 0xDB: case 0xDD:
 	case 0xE3: case 0xE4: case 0xEB: case 0xEC: case 0xED:
 	case 0xF4: case 0xFC: case 0xFD:
