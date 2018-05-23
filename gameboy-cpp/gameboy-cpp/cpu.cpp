@@ -28,6 +28,7 @@ void CPU::cycle()
 	byte memory_value_u8;
 	word memory_value_u16;
 	const word& pc = m_registers.get_program_counter();
+	const word& sp = m_registers.get_stack_pointer();
 	const word& opcode = decode(pc);
 
 	switch (opcode)
@@ -42,10 +43,29 @@ void CPU::cycle()
 	case 0x01:	// LD BC, <u16>
 	case 0x11:	// LD DE, <u16>
 	case 0x21:	// LD HL, <u16>
-		cr_dst = static_cast<CombinedRegister>(opcode >> 3 & 0x7);
+		cr_dst = static_cast<CombinedRegister>(opcode >> 4 & 0x7);
 		immediate_u16 = m_mmu->read_memory(pc + 1) << 8 | m_mmu->read_memory(pc + 2);
 		m_registers.set_register(cr_dst, immediate_u16);
 		m_registers.increment_clock_cycles(12, 3);
+		pc_step += 3;
+		break;
+		
+		// LD (CReg), A
+	case 0x02:	case 0x12:
+		cr_dst = static_cast<CombinedRegister>(opcode >> 4 & 0x7);
+		immediate_u16 = m_registers.get_register(cr_dst);
+		src = m_registers.get_register(R_A);
+		m_mmu->write_memory(immediate_u16, src);
+		m_registers.increment_clock_cycles(8, 2);
+		pc_step += 1;
+		break;
+
+		// LD <u16>, SP
+	case 0x08:
+		immediate_u16 = m_mmu->read_memory(pc + 1) << 8 | m_mmu->read_memory(pc + 2);
+		cr_src = m_registers.get_stack_pointer();
+		m_mmu->write_memory_u16(immediate_u16, cr_src);
+		m_registers.increment_clock_cycles(20, 5);
 		pc_step += 3;
 		break;
 
@@ -58,6 +78,39 @@ void CPU::cycle()
 		//m_registers.register_addition(cr_dst, cr_src);
 		m_registers.increment_clock_cycles(8, 2);
 		pc_step += 2;
+		break;
+
+		// LD A, (CReg)
+	case 0x0A:	case 0x1A:
+		dst = R_A;
+		cr_dst = static_cast<CombinedRegister>(opcode >> 4 & 0x7);
+		immediate_u16 = m_registers.get_register(cr_dst);
+		memory_value_u8 = m_mmu->read_memory(immediate_u16);
+		m_registers.set_register(dst, memory_value_u8);
+		m_registers.increment_clock_cycles(8, 2);
+		pc_step += 1;
+		break;
+	
+		// LD A, (HL+)
+	case 0x2A:
+		dst = R_A;
+		immediate_u16 = m_registers.get_register(R_HL);
+		memory_value_u8 = m_mmu->read_memory(immediate_u16);
+		m_registers.set_register(dst, memory_value_u8);
+		m_registers.increment_register(R_HL);
+		m_registers.increment_clock_cycles(8, 2);
+		pc_step += 1;
+		break;
+
+		// LD A, (HL-)
+	case 0x3A:
+		dst = R_A;
+		immediate_u16 = m_registers.get_register(R_HL);
+		memory_value_u8 = m_mmu->read_memory(immediate_u16);
+		m_registers.set_register(dst, memory_value_u8);
+		m_registers.decrement_register(R_HL);
+		m_registers.increment_clock_cycles(8, 2);
+		pc_step += 1;
 		break;
 
 		// ADD HL, SP
@@ -73,7 +126,7 @@ void CPU::cycle()
 	case 0x03:	// INC BC	
 	case 0x13:	// INC DE
 	case 0x23:	// INC HL
-		cr_dst = static_cast<CombinedRegister>(opcode >> 3 & 0x7);
+		cr_dst = static_cast<CombinedRegister>(opcode >> 4 & 0x7);
 		m_registers.increment_register(cr_dst);
 		m_registers.increment_clock_cycles(8, 2);
 		pc_step += 1;
@@ -83,7 +136,7 @@ void CPU::cycle()
 	case 0x0B:	// DEC BC
 	case 0x1B:	// DEC DE
 	case 0x2B:	// DEC HL
-		cr_dst = static_cast<CombinedRegister>(opcode >> 3 & 0x7);
+		cr_dst = static_cast<CombinedRegister>(opcode >> 4 & 0x7);
 		m_registers.decrement_register(cr_dst);
 		m_registers.increment_clock_cycles(8, 2);
 		pc_step += 1;
@@ -92,6 +145,26 @@ void CPU::cycle()
 		// STOP
 	case 0x10:	// STOP	NEEDS TO ACTUALLY STOP STUFF
 		m_registers.increment_clock_cycles(4, 1);
+		pc_step += 2;
+		break;
+
+		// LD (HL+), A
+	case 0x22:
+		src = R_A;
+		immediate_u16 = m_registers.get_register(R_HL);
+		m_mmu->write_memory(immediate_u16, src);
+		m_registers.increment_register(R_HL);
+		m_registers.increment_clock_cycles(8, 2);
+		pc_step += 2;
+		break;
+
+		// LD (HL-), A
+	case 0x32:
+		src = R_A;
+		immediate_u16 = m_registers.get_register(R_HL);
+		m_mmu->write_memory(immediate_u16, src);
+		m_registers.decrement_register(R_HL);
+		m_registers.increment_clock_cycles(8, 2);
 		pc_step += 2;
 		break;
 
@@ -324,6 +397,27 @@ void CPU::cycle()
 		pc_step += 1;
 		break;
 
+		// POP <CReg> HANDLE AF CASE WITH FLAGS????
+	case 0xC1:	case 0xD1:	case 0xE1:	case 0xF1:
+		cr_dst = static_cast<CombinedRegister>(opcode >> 4 & 0x3);
+		memory_value_u16 = m_mmu->read_memory_u16(sp);
+		m_registers.set_register(cr_dst, memory_value_u16);
+		m_registers.increment_stack_pointer();
+		m_registers.increment_stack_pointer();
+		m_registers.increment_clock_cycles(12, 3);
+		pc_step += 1;
+		break;
+
+		// PUSH <CReg>
+	case 0xC5:	case 0xD5:	case 0xE5:	case 0xF5:
+		cr_src = m_registers.get_register(static_cast<CombinedRegister>(opcode >> 4 & 0x3));
+		m_mmu->write_memory_u16(sp, cr_src);
+		m_registers.decrement_stack_pointer();
+		m_registers.decrement_stack_pointer();
+		m_registers.increment_clock_cycles(16, 4);
+		pc_step += 1;
+		break;
+
 	case 0xC6: case 0xCE:	// ADD A, <u8> + ADC A, <u8>
 		carry = opcode & 0x8; // if true, handle carry
 		dst = R_A;
@@ -342,6 +436,15 @@ void CPU::cycle()
 		pc_step += 2;
 		break;
 
+	case 0xE0:	// LD (FF00 + <u8>), A
+		src = m_registers.get_register(R_A);
+		immediate_u8 = m_mmu->read_memory(pc + 1);
+		immediate_u16 = 0xFF00 + immediate_u8;
+		m_mmu->write_memory(immediate_u16, src);
+		m_registers.increment_clock_cycles(12, 3);
+		pc_step += 2;
+		break;
+
 	case 0xE6:	// AND A, <u8>
 		dst = R_A;
 		immediate_u8 = m_mmu->read_memory(pc + 1);
@@ -354,6 +457,15 @@ void CPU::cycle()
 		immediate_u8 = m_mmu->read_memory(pc + 1);
 		m_registers.register_bitwise_xor(dst, immediate_u8);
 		m_registers.increment_clock_cycles(8, 2);
+		pc_step += 2;
+		break;
+
+	case 0xF0:	// LD A, (FF00 + <u8>)
+		dst = R_A;
+		immediate_u8 = m_mmu->read_memory(pc + 1);
+		immediate_u16 = 0xFF00 + immediate_u8;
+		m_registers.set_register(dst, immediate_u16);
+		m_registers.increment_clock_cycles(12, 3);
 		pc_step += 2;
 		break;
 		
