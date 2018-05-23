@@ -174,12 +174,36 @@ void CPU::cycle()
 		pc_step += 1;
 		break;
 
+		// JR i8
+	case 0x18:
+		signed_immediate_u8 = m_mmu->read_memory(pc + 1);
+		immediate_u16 = pc + signed_immediate_u8;
+		m_registers.set_program_counter(immediate_u16);
+		m_registers.increment_clock_cycles(12, 3);
+		break;
+
 		// RRA
 	case 0x1F:
 		src = m_registers.get_register(R_A);
 		m_registers.register_rotate_right_carry(R_A, src);
 		m_registers.increment_clock_cycles(4, 1);
 		pc_step += 1;
+		break;
+		
+		// JR NZ, i8
+	case 0x20:
+		if (!m_registers.get_flag(ZERO_FLAG)) // jump if not zero
+		{
+			signed_immediate_u8 = m_mmu->read_memory(pc + 1);
+			immediate_u16 = pc + signed_immediate_u8;
+			m_registers.set_program_counter(immediate_u16);
+			m_registers.increment_clock_cycles(12, 3);
+		}
+		else
+		{
+			m_registers.increment_clock_cycles(8, 2);
+			pc_step += 2;
+		}
 		break;
 
 		// LD (HL+), A
@@ -190,6 +214,38 @@ void CPU::cycle()
 		m_registers.increment_register(R_HL);
 		m_registers.increment_clock_cycles(8, 2);
 		pc_step += 2;
+		break;
+
+		// JR NC, i8
+	case 0x28:
+		if (!m_registers.get_flag(CARRY_FLAG)) // jump if no carry
+		{
+			signed_immediate_u8 = m_mmu->read_memory(pc + 1);
+			immediate_u16 = pc + signed_immediate_u8;
+			m_registers.set_program_counter(immediate_u16);
+			m_registers.increment_clock_cycles(12, 3);
+		}
+		else
+		{
+			m_registers.increment_clock_cycles(8, 2);
+			pc_step += 2;
+		}
+		break;
+
+		// JR Z, i8
+	case 0x30:
+		if (m_registers.get_flag(ZERO_FLAG)) // jump if zero
+		{
+			signed_immediate_u8 = m_mmu->read_memory(pc + 1);
+			immediate_u16 = pc + signed_immediate_u8;
+			m_registers.set_program_counter(immediate_u16);
+			m_registers.increment_clock_cycles(12, 3);
+		}
+		else
+		{
+			m_registers.increment_clock_cycles(8, 2);
+			pc_step += 2;
+		}
 		break;
 
 		// LD (HL-), A
@@ -273,6 +329,22 @@ void CPU::cycle()
 		m_registers.set_carry_flag();
 		m_registers.increment_clock_cycles(4, 1);
 		pc_step += 1;
+		break;
+
+		// JR C, i8
+	case 0x38:
+		if (m_registers.get_flag(CARRY_FLAG)) // jump if carry
+		{
+			signed_immediate_u8 = m_mmu->read_memory(pc + 1);
+			immediate_u16 = pc + signed_immediate_u8;
+			m_registers.set_program_counter(immediate_u16);
+			m_registers.increment_clock_cycles(12, 3);
+		}
+		else
+		{
+			m_registers.increment_clock_cycles(8, 2);
+			pc_step += 2;
+		}
 		break;
 
 	case 0x3B:	// DEC SP
