@@ -7,7 +7,9 @@
 #include <fstream>
 
 typedef uint8_t byte;
+typedef int8_t ibyte;
 typedef uint16_t word;
+typedef int16_t iword;
 
 enum Register
 {

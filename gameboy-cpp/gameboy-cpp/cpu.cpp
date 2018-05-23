@@ -24,7 +24,9 @@ void CPU::cycle()
 	bool carry = false;
 	word pc_step = 0x00;
 	byte immediate_u8 = 0x00;
+	ibyte signed_immediate_u8 = 0x00;
 	word immediate_u16 = 0x0000;
+	iword signed_immmediate_u16 = 0x00;
 	byte memory_value_u8;
 	word memory_value_u16;
 	const word& pc = m_registers.get_program_counter();
@@ -445,6 +447,15 @@ void CPU::cycle()
 		pc_step += 2;
 		break;
 
+	case 0xE2:	// LD (FF00 + C), A
+		src = m_registers.get_register(R_A);
+		immediate_u8 = m_registers.get_register(R_C);
+		immediate_u16 = 0xFF00 + immediate_u8;
+		m_mmu->write_memory(immediate_u16, src);
+		m_registers.increment_clock_cycles(8, 2);
+		pc_step += 1;
+		break;
+
 	case 0xE6:	// AND A, <u8>
 		dst = R_A;
 		immediate_u8 = m_mmu->read_memory(pc + 1);
@@ -452,6 +463,15 @@ void CPU::cycle()
 		m_registers.increment_clock_cycles(8, 2);
 		pc_step += 2;
 		break;
+
+	case 0xEA:	// LD (u16), A
+		immediate_u16 = m_mmu->read_memory(pc + 1) << 8 | m_mmu->read_memory(pc + 2);
+		src = m_registers.get_register(R_A);
+		m_mmu->write_memory(immediate_u16, src);
+		m_registers.increment_clock_cycles(16, 4);
+		pc_step += 3;
+		break;
+
 	case 0xEE:	// XOR A, <u8>
 		dst = R_A;
 		immediate_u8 = m_mmu->read_memory(pc + 1);
@@ -468,6 +488,15 @@ void CPU::cycle()
 		m_registers.increment_clock_cycles(12, 3);
 		pc_step += 2;
 		break;
+
+	case 0xF2:	// LD A, (FF00 + C)
+		dst = R_A;
+		immediate_u8 = m_registers.get_register(R_C);
+		immediate_u16 = 0xFF00 + immediate_u8;
+		src = m_mmu->read_memory(immediate_u16);
+		m_registers.set_register(dst, src);
+		m_registers.increment_clock_cycles(8, 2);
+		pc_step += 2;
 		
 	case 0xF6:	// OR A, <u8>
 		dst = R_A;
@@ -475,6 +504,25 @@ void CPU::cycle()
 		m_registers.register_bitwise_or(dst, immediate_u8);
 		m_registers.increment_clock_cycles(8, 2);
 		pc_step += 2;
+		break;
+
+	case 0xF8:	// LD HL, SP + i8 need to handle unsigned
+		break;
+
+	case 0xF9:	// LD SP, HL
+		cr_src = m_registers.get_register(R_HL);
+		m_registers.set_stack_pointer(cr_src);
+		m_registers.increment_clock_cycles(8, 2);
+		pc_step += 1;
+		break;
+
+	case 0xFA:	// LD A, (u16)
+		dst = R_A;
+		immediate_u16 = m_mmu->read_memory(pc + 1) << 8 | m_mmu->read_memory(pc + 2);
+		memory_value_u8 = m_mmu->read_memory(immediate_u16);
+		m_registers.set_register(R_A, memory_value_u8);
+		m_registers.increment_clock_cycles(16, 4);
+		pc_step += 3;
 		break;
 	case 0xFE:	// CP A, <u8>
 		dst = R_A;
