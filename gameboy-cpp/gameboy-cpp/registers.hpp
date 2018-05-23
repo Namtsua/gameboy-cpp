@@ -28,6 +28,7 @@ public:
 	void set_stack_pointer(const word& value);
 	void increment_stack_pointer();
 	void decrement_stack_pointer();
+	bool get_flag(const byte& flag) const;
 	void complement_register_A();
 	void complement_carry_flag();
 	void set_carry_flag();

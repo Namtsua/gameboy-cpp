@@ -92,7 +92,7 @@ void CPU::cycle()
 		m_registers.increment_clock_cycles(8, 2);
 		pc_step += 1;
 		break;
-	
+
 		// LD A, (HL+)
 	case 0x2A:
 		dst = R_A;
@@ -216,6 +216,7 @@ void CPU::cycle()
 		m_registers.increment_clock_cycles(8, 2);
 		pc_step += 2;
 		break;
+
 	case 0x31: // LD SP, <u16>
 		immediate_u16 = m_mmu->read_memory(pc + 2) << 8 | m_mmu->read_memory(pc + 1);
 		m_registers.set_stack_pointer(immediate_u16);
@@ -410,6 +411,28 @@ void CPU::cycle()
 		pc_step += 1;
 		break;
 
+		// JP NZ, <u16> CHECK CLOCK CYCLES
+	case 0xC2:
+		immediate_u16 = m_mmu->read_memory(pc + 1) << 8 | m_mmu->read_memory(pc + 2);
+		if (!m_registers.get_flag(ZERO_FLAG)) // jump if not zero
+		{
+			m_registers.set_program_counter(immediate_u16);
+			m_registers.increment_clock_cycles(12, 3);
+		}
+		else
+		{
+			m_registers.increment_clock_cycles(16, 4);
+			pc_step += 3;
+		}
+		break;
+
+		// JP <u16> change pc?
+	case 0xC3:
+		immediate_u16 = m_mmu->read_memory(pc + 1) << 8 | m_mmu->read_memory(pc + 2);
+		m_registers.set_program_counter(immediate_u16);
+		m_registers.increment_clock_cycles(16, 4);
+		break;
+
 		// PUSH <CReg>
 	case 0xC5:	case 0xD5:	case 0xE5:	case 0xF5:
 		cr_src = m_registers.get_register(static_cast<CombinedRegister>(opcode >> 4 & 0x3));
@@ -429,6 +452,36 @@ void CPU::cycle()
 		pc_step += 2;
 		break;
 
+		//	JP Z, <u16>
+	case 0xCA:
+		immediate_u16 = m_mmu->read_memory(pc + 1) << 8 | m_mmu->read_memory(pc + 2);
+		if (m_registers.get_flag(ZERO_FLAG)) // jump if zero
+		{
+			m_registers.set_program_counter(immediate_u16);
+			m_registers.increment_clock_cycles(12, 3);
+		}
+		else
+		{
+			m_registers.increment_clock_cycles(16, 4);
+			pc_step += 3;
+		}
+		break;
+
+		// JP NC, <u16>
+	case 0xD2:
+		immediate_u16 = m_mmu->read_memory(pc + 1) << 8 | m_mmu->read_memory(pc + 2);
+		if (!m_registers.get_flag(CARRY_FLAG)) // jump if no carry
+		{
+			m_registers.set_program_counter(immediate_u16);
+			m_registers.increment_clock_cycles(12, 3);
+		}
+		else
+		{
+			m_registers.increment_clock_cycles(16, 4);
+			pc_step += 3;
+		}
+		break;
+
 	case 0xD6: case 0xDE:	// SUB A, <u8> + SBC A, <u8>
 		carry = opcode & 0x8; // if true, handle carry
 		dst = R_A;
@@ -436,6 +489,21 @@ void CPU::cycle()
 		m_registers.register_subtraction(dst, immediate_u8, carry);
 		m_registers.increment_clock_cycles(8, 2);
 		pc_step += 2;
+		break;
+
+		// JP C, <u16>
+	case 0xDA:
+		immediate_u16 = m_mmu->read_memory(pc + 1) << 8 | m_mmu->read_memory(pc + 2);
+		if (m_registers.get_flag(CARRY_FLAG)) // jump if carry
+		{
+			m_registers.set_program_counter(immediate_u16);
+			m_registers.increment_clock_cycles(12, 3);
+		}
+		else
+		{
+			m_registers.increment_clock_cycles(16, 4);
+			pc_step += 3;
+		}
 		break;
 
 	case 0xE0:	// LD (FF00 + <u8>), A
@@ -462,6 +530,13 @@ void CPU::cycle()
 		m_registers.register_bitwise_and(dst, immediate_u8);
 		m_registers.increment_clock_cycles(8, 2);
 		pc_step += 2;
+		break;
+
+	case 0xE9:	// JP (HL)
+		immediate_u16 = m_registers.get_register(R_HL);
+		memory_value_u16 = m_mmu->read_memory_u16(immediate_u16);
+		m_registers.set_program_counter(memory_value_u16);
+		m_registers.increment_clock_cycles(4, 1);
 		break;
 
 	case 0xEA:	// LD (u16), A

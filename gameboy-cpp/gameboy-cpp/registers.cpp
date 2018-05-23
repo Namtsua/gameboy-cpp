@@ -337,6 +337,11 @@ void Registers::decrement_stack_pointer()
 	--SP;
 }
 
+bool Registers::get_flag(const byte& flag) const
+{
+	return GET_FLAG(flag) != 0x0;
+}
+
 word Registers::get_program_counter() const
 {
 	return PC;
