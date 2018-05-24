@@ -18,6 +18,7 @@ public:
 	byte get_register(const Register& r) const;
 	word get_register(const CombinedRegister& r) const;
 	void register_addition(const Register& r, const byte& value, const bool& carry = false);
+	void register_signed_addition(const Register&, const ibyte& value);
 	void register_subtraction(const Register& r, const byte& value, const bool& carry = false);
 	void register_multiplication(const Register& r, const byte& value);
 	void register_bitwise_and(const Register& r, const byte& value);

@@ -121,6 +121,14 @@ void Registers::register_addition(const Register &r, const byte& value, const bo
 	set_register(r, result);
 }
 
+void Registers::register_signed_addition(const Register &r, const ibyte& value)
+{
+	const byte& reg_value = get_register(r);
+	byte result = reg_value + value;
+	CLEAR_FLAG(SUB_FLAG);
+
+}
+
 void Registers::register_subtraction(const Register &r, const byte& value, const bool& carry /* = false */)
 {
 	const byte& reg_value = get_register(r);
