@@ -46,6 +46,27 @@ void Registers::set_register(const CombinedRegister& r, const word& value)
 	}
 }
 
+// check logic
+void Registers::load_HL_with_SP(const iword& value)
+{
+	word result = SP + value;
+	word carry = (SP ^ value ^ result) & 0xFFFF;
+	CLEAR_FLAG(ZERO_FLAG);
+	CLEAR_FLAG(SUB_FLAG);
+
+	if ((carry & 0x100) == 0x100)
+		SET_FLAG(CARRY_FLAG);
+	else
+		CLEAR_FLAG(CARRY_FLAG);
+
+	if ((carry & 0x10) == 0x10)
+		SET_FLAG(HALF_CARRY_FLAG);
+	else
+		CLEAR_FLAG(HALF_CARRY_FLAG);
+
+	set_register(R_HL, result);
+}
+
 byte Registers::get_register(const Register& r) const
 {
 	switch (r)
@@ -121,15 +142,27 @@ void Registers::register_addition(const Register &r, const byte& value, const bo
 	set_register(r, result);
 }
 
-void Registers::register_signed_addition(const Register &r, const ibyte& value)
+// check flag logic
+void Registers::register_addition(const CombinedRegister& r, const word& value)
 {
-	const byte& reg_value = get_register(r);
-	byte result = reg_value + value;
+	const word& reg_value = get_register(r);
+	word result = reg_value + value;
 	CLEAR_FLAG(SUB_FLAG);
 
+	if (result < reg_value)
+		SET_FLAG(CARRY_FLAG);
+	else
+		CLEAR_FLAG(CARRY_FLAG);
+
+	if ((result ^ reg_value ^ value) & 0x1000)
+		SET_FLAG(HALF_CARRY_FLAG);
+	else
+		CLEAR_FLAG(HALF_CARRY_FLAG);
+
+	set_register(r, result);
 }
 
-void Registers::register_subtraction(const Register &r, const byte& value, const bool& carry /* = false */)
+void Registers::register_subtraction(const Register& r, const byte& value, const bool& carry /* = false */)
 {
 	const byte& reg_value = get_register(r);
 	byte result = reg_value - value;
@@ -435,6 +468,24 @@ word Registers::get_stack_pointer() const
 void Registers::set_stack_pointer(const word& value)
 {
 	SP = value;
+}
+
+void Registers::stack_pointer_signed_addition(const ibyte& value)
+{
+	byte result = SP + value;
+
+	if ((result & 0xF) < (SP & 0xF))
+		SET_FLAG(HALF_CARRY_FLAG);
+	else
+		CLEAR_FLAG(HALF_CARRY_FLAG);
+
+	if ((result & 0xFF) < (SP & 0xFF))
+		SET_FLAG(CARRY_FLAG);
+	else
+		CLEAR_FLAG(CARRY_FLAG);
+
+	CLEAR_FLAG(ZERO_FLAG);
+	CLEAR_FLAG(SUB_FLAG);
 }
 
 void Registers::increment_stack_pointer()

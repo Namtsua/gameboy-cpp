@@ -87,7 +87,7 @@ void CPU::cycle()
 	case 0x29:	// ADD HL, HL
 		cr_dst = R_HL;
 		cr_src = m_registers.get_register(static_cast<CombinedRegister>(opcode & 0x7));
-		//m_registers.register_addition(cr_dst, cr_src);
+		m_registers.register_addition(cr_dst, cr_src);
 		m_registers.increment_clock_cycles(8, 2);
 		pc_step += 2;
 		break;
@@ -290,7 +290,7 @@ void CPU::cycle()
 	case 0x39:
 		cr_dst = R_HL;
 		cr_src = m_registers.get_program_counter();
-		// m_registers.register_addition(cr_dst, cr_src);
+		m_registers.register_addition(cr_dst, cr_src);
 		m_registers.increment_clock_cycles(8, 2);
 		pc_step += 2;
 		break;
@@ -841,6 +841,14 @@ void CPU::cycle()
 		m_registers.increment_clock_cycles(16, 4);
 		break;
 
+		// ADD SP, <i8>
+	case 0xE8:
+		signed_immediate_u8 = m_mmu->read_memory(pc + 1);
+		m_registers.stack_pointer_signed_addition(signed_immediate_u8);
+		m_registers.increment_clock_cycles(16, 4);
+		pc_step += 2;
+		break;
+
 	case 0xE9:	// JP (HL)
 		immediate_u16 = m_registers.get_register(R_HL);
 		memory_value_u16 = m_mmu->read_memory_u16(immediate_u16);
@@ -912,6 +920,10 @@ void CPU::cycle()
 		break;
 
 	case 0xF8:	// LD HL, SP + i8 need to handle unsigned
+		signed_immediate_u8 = m_mmu->read_memory(pc + 1);
+		m_registers.load_HL_with_SP(signed_immediate_u8);
+		m_registers.increment_clock_cycles(12, 3);
+		pc_step += 2;
 		break;
 
 	case 0xF9:	// LD SP, HL

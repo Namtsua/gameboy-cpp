@@ -15,9 +15,11 @@ public:
 	void initialize();
 	void set_register(const Register& r, const byte& value);
 	void set_register(const CombinedRegister& r, const word& value);
+	void load_HL_with_SP(const iword& value);
 	byte get_register(const Register& r) const;
 	word get_register(const CombinedRegister& r) const;
 	void register_addition(const Register& r, const byte& value, const bool& carry = false);
+	void register_addition(const CombinedRegister& r, const word& value);
 	void register_signed_addition(const Register&, const ibyte& value);
 	void register_subtraction(const Register& r, const byte& value, const bool& carry = false);
 	void register_multiplication(const Register& r, const byte& value);
@@ -31,6 +33,7 @@ public:
 	void register_rotate_right_carry(const Register& r, const byte& value);
 	word get_stack_pointer() const;
 	void set_stack_pointer(const word& value);
+	void stack_pointer_signed_addition(const ibyte& value);
 	void increment_stack_pointer();
 	void decrement_stack_pointer();
 	bool get_flag(const byte& flag) const;
