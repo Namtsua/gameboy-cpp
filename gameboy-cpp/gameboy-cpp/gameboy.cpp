@@ -6,7 +6,8 @@ GameBoy::GameBoy()
 	Cartridge* cart = new Cartridge(mmu);
 	cart->load("./roms/DMG_ROM.bin");
 	CPU* cpu = new CPU(mmu);
-	cpu->cycle();
+	while(1)
+		cpu->cycle();
 }
 
 GameBoy::~GameBoy()

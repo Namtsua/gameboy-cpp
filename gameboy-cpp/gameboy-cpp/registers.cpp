@@ -393,6 +393,75 @@ void Registers::register_rotate_right_carry(const Register& r, const byte& value
 	set_register(r, result);
 }
 
+void Registers::register_shift_left(const Register& r, const byte& value)
+{
+	byte result = value;
+	const byte& carry = value & 0x80 ? SET_FLAG(CARRY_FLAG) : CLEAR_FLAG(CARRY_FLAG);
+
+	// Shift left and set LSB to 0
+	result <<= 1;
+	result &= 0x0;
+
+	if (result == 0x00)
+		SET_FLAG(ZERO_FLAG);
+	else
+		CLEAR_FLAG(ZERO_FLAG);
+
+	CLEAR_FLAG(SUB_FLAG);
+	CLEAR_FLAG(HALF_CARRY_FLAG);
+	set_register(r, result);
+}
+
+
+void Registers::register_shift_right(const Register& r, const byte& value)
+{
+	byte result = value;
+	const byte& carry = value & 0x1 ? SET_FLAG(CARRY_FLAG) : CLEAR_FLAG(CARRY_FLAG);
+
+	result >>= 1;
+
+	if (result == 0x00)
+		SET_FLAG(ZERO_FLAG);
+	else
+		CLEAR_FLAG(ZERO_FLAG);
+
+	CLEAR_FLAG(SUB_FLAG);
+	CLEAR_FLAG(HALF_CARRY_FLAG);
+	set_register(r, result);
+}
+
+void Registers::register_shift_right_carry(const Register& r, const byte& value)
+{
+	byte result = value;
+	const byte& carry = value & 0x1 ? SET_FLAG(CARRY_FLAG) : CLEAR_FLAG(CARRY_FLAG);
+
+	result = (result >> 1) | (result & 0x80);
+
+	if (result == 0x00)
+		SET_FLAG(ZERO_FLAG);
+	else
+		CLEAR_FLAG(ZERO_FLAG);
+
+	CLEAR_FLAG(SUB_FLAG);
+	CLEAR_FLAG(HALF_CARRY_FLAG);
+	set_register(r, result);
+}
+
+void Registers::swap(const Register& r, const byte& value)
+{
+	byte result = (value & 0xF << 4) | (value & 0xF0 >> 4);
+	CLEAR_FLAG(SUB_FLAG);
+	CLEAR_FLAG(CARRY_FLAG);
+	CLEAR_FLAG(HALF_CARRY_FLAG);
+
+	if (result == 0x00)
+		SET_FLAG(ZERO_FLAG);
+	else
+		CLEAR_FLAG(ZERO_FLAG);
+
+	set_register(r, result);
+}
+
 void Registers::increment_register(const Register& r)
 {
 	byte result = get_register(r) + 1;
@@ -409,6 +478,7 @@ void Registers::increment_register(const Register& r)
 	CLEAR_FLAG(SUB_FLAG);
 	set_register(r, result);
 }
+
 
 void Registers::increment_register(const CombinedRegister& r)
 {

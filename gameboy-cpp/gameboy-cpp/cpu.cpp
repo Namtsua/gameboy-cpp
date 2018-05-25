@@ -1,5 +1,6 @@
 #include "cpu.hpp"
-
+#include <iostream>
+#include <iomanip>
 //#define LD_REG_REG(dst,src) m_registers.set_register(dst,m_registers.get_register(src)); m_registers.increment_clock_cycles(4,1)
 //#define ADD_REG_REG(dst,src) m_registers.register_addition(dst, m_registers.get_register(src)); m_registers.increment_clock_cycles(4,1)
 //#define SUB_REG_REG(dst,src) m_registers.register_subtraction(dst, m_registers.get_register(src)); m_registers.increment_clock_cycles(4,1)
@@ -32,7 +33,8 @@ void CPU::cycle()
 	const word& pc = m_registers.get_program_counter();
 	const word& sp = m_registers.get_stack_pointer();
 	const word& opcode = decode(pc);
-
+//	fprintf(stderr, "Opcode received: ")
+	std::cout << std::hex << opcode << std::endl;
 	switch (opcode)
 	{
 		// LD <CReg>, <u16>
@@ -643,6 +645,13 @@ void CPU::cycle()
 		}
 		break;
 
+		// CB Prefix
+	case 0xCB:
+		immediate_u8 = m_mmu->read_memory(pc + 1);
+		CB(immediate_u8);
+		pc_step += 2;
+		break;
+
 		// CALL Z, <u16>
 	case 0xCC:
 		if (m_registers.get_flag(ZERO_FLAG)) // Call if zero
@@ -971,7 +980,94 @@ void CPU::cycle()
 	m_registers.advance_program_counter(pc_step);
 }
 
-word CPU::decode(const word& pc)
+void CPU::CB(const byte& opcode)
+{
+	switch (opcode)
+	{
+		// RLC <reg>
+	case 0x00:	case 0x01:	case 0x02:	case 0x03:	case 0x04:	case 0x05:	case 0x07:
+		dst = static_cast<Register>(opcode);
+		src = m_registers.get_register(dst);
+		m_registers.register_rotate_left_carry(dst, src);
+		m_registers.increment_clock_cycles(8, 2);
+		break;
+
+		// RRC <reg>
+	case 0x08:	case 0x09:	case 0x0A:	case 0x0B:	case 0x0C:	case 0x0D:	case 0x0F:
+		dst = static_cast<Register>(opcode & 0x7);
+		src = m_registers.get_register(dst);
+		m_registers.register_rotate_right_carry(dst, src);
+		m_registers.increment_clock_cycles(8, 2);
+		break;
+
+		// RL <reg>
+	case 0x10:	case 0x11:	case 0x12:	case 0x13:	case 0x14:	case 0x15:	case 0x17:
+		dst = static_cast<Register>(opcode & 0x7);
+		src = m_registers.get_register(dst);
+		m_registers.register_rotate_left(dst, src);
+		m_registers.increment_clock_cycles(8, 2);
+		break;
+
+		// RR <reg>
+	case 0x18:	case 0x19:	case 0x1A:	case 0x1B:	case 0x1C:	case 0x1D:	case 0x1F:
+		dst = static_cast<Register>(opcode & 0x7);
+		src = m_registers.get_register(dst);
+		m_registers.register_rotate_right(dst, src);
+		m_registers.increment_clock_cycles(8, 2);
+		break;
+
+		// SLA <reg>
+	case 0x20:	case 0x21:	case 0x22:	case 0x23:	case 0x24:	case 0x25:	case 0x27:
+		dst = static_cast<Register>(opcode & 0x7);
+		src = m_registers.get_register(dst);
+		m_registers.register_shift_left(dst, src);
+		m_registers.increment_clock_cycles(8, 2);
+		break;
+
+		// SRA <reg>
+	case 0x28:	case 0x29:	case 0x2A:	case 0x2B:	case 0x2C:	case 0x2D:	case 0x2F:
+		dst = static_cast<Register>(opcode & 0x7);
+		src = m_registers.get_register(dst);
+		m_registers.register_shift_right_carry(dst, src);
+		m_registers.increment_clock_cycles(8, 2);
+		break;
+
+		// SWAP <reg>
+	case 0x30:	case 0x31:	case 0x32:	case 0x33:	case 0x34:	case 0x35:	case 0x37:
+		dst = static_cast<Register>(opcode & 0x7);
+		src = m_registers.get_register(dst);
+		m_registers.swap(dst, src);
+		m_registers.increment_clock_cycles(8, 2);
+		break;
+
+		// SRL <reg>
+	case 0x38:	case 0x39:	case 0x3A:	case 0x3B:	case 0x3C:	case 0x3D:	case 0x3F:
+		dst = static_cast<Register>(opcode & 0x7);
+		src = m_registers.get_register(dst);
+		m_registers.register_shift_right(dst, src);
+		m_registers.increment_clock_cycles(8, 2);
+		break;
+
+		// BIT <bit>, <reg>
+	case 0x40:	case 0x41:	case 0x42:	case 0x43:	case 0x44:	case 0x45:	case 0x47:
+	case 0x48:	case 0x49:	case 0x4A:	case 0x4B:	case 0x4C:	case 0x4D:	case 0x4F:
+	case 0x50:	case 0x51:	case 0x52:	case 0x53:	case 0x54:	case 0x55:	case 0x57:
+	case 0x58:	case 0x59:	case 0x5A:	case 0x5B:	case 0x5C:	case 0x5D:	case 0x5F:
+	case 0x60:	case 0x61:	case 0x62:	case 0x63:	case 0x64:	case 0x65:	case 0x67:
+	case 0x68:	case 0x69:	case 0x6A:	case 0x6B:	case 0x6C:	case 0x6D:	case 0x6F:
+	case 0x70:	case 0x71:	case 0x72:	case 0x73:	case 0x74:	case 0x75:	case 0x77:
+	case 0x78:	case 0x79:	case 0x7A:	case 0x7B:	case 0x7C:	case 0x7D:	case 0x7F:
+		bit = opcode >> 3 & 0x7;
+		reg = static_cast<Register>(opcode & 0x7);
+		m_registers.bit(reg, bit);
+		m_registers.increment_clock_cycles(8, 2);
+		break;
+
+
+	}
+}
+
+byte CPU::decode(const word& pc)
 {
 	return m_mmu->read_memory(pc);
 }

@@ -31,6 +31,11 @@ public:
 	void register_rotate_left_carry(const Register& r, const byte& value);
 	void register_rotate_right(const Register& r, const byte& value);
 	void register_rotate_right_carry(const Register& r, const byte& value);
+	void register_shift_left(const Register& r, const byte& value);
+	void register_shift_right(const Register& r, const byte& value);
+	void register_shift_right_carry(const Register& r, const byte& value);
+	void swap(const Register& r, const byte& value);
+	void bit(const Register& r, const byte& bit);
 	word get_stack_pointer() const;
 	void set_stack_pointer(const word& value);
 	void stack_pointer_signed_addition(const ibyte& value);
