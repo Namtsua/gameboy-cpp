@@ -36,10 +36,10 @@ void Registers::set_register(const CombinedRegister& r, const word& value)
 {
 	switch (r)
 	{
-	case R_BC:	B = value & 0xFF00; C = value & 0x00FF; break;
-	case R_DE:	D = value & 0xFF00; C = value & 0x00FF; break;
-	case R_HL:	H = value & 0xFF00; L = value & 0x00FF; break;
-	case R_AF:	A = value & 0xFF00; F = value & 0x00FF; break;
+	case R_BC:	B = (value & 0xFF00) >> 8; C = value & 0x00FF; break;
+	case R_DE:	D = (value & 0xFF00) >> 8; C = value & 0x00FF; break;
+	case R_HL:	H = (value & 0xFF00) >> 8; L = value & 0x00FF; break;
+	case R_AF:	A = (value & 0xFF00) >> 8; F = value & 0x00FF; break;
 	default:
 		fprintf(stderr, "Unknown combined register specified");
 		exit(1);

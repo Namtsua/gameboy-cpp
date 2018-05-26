@@ -264,7 +264,7 @@ void CPU::cycle()
 
 		// LD (HL-), A
 	case 0x32:
-		src = R_A;
+		src = m_registers.get_register(R_A);
 		immediate_u16 = m_registers.get_register(R_HL);
 		m_mmu->write_memory(immediate_u16, src);
 		m_registers.decrement_register(R_HL);
