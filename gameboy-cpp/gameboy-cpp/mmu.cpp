@@ -84,6 +84,7 @@ void MMU::write_memory(const word& address, const byte& value)
 	case 0x2000:
 	case 0x3000:
 		cartridge_bank[address] = value;
+		break;
 
 		//  Cartridge ROM, other banks
 	case 0x4000:
@@ -91,25 +92,30 @@ void MMU::write_memory(const word& address, const byte& value)
 	case 0x6000:
 	case 0x7000:
 		cartridge_bank[address] = value;
+		break;
 
 		//	Graphics RAM
 	case 0x8000:
 	case 0x9000:
 		graphics_ram[address - 0x8000] = value;
+		break;
 
 		// Cartridge External RAM
 	case 0xA000:
 	case 0xB000:
 		cartridge_external_ram[address - 0xA000] = value;
+		break;
 
 		// Working RAM
 	case 0xC000:
 	case 0xD000:
 		working_ram[address - 0xC000] = value;
+		break;
 
 		// Working RAM (shadow)
 	case 0xE000:
 		working_ram_shadow[address - 0xE000] = value;
+		break;
 
 	case 0xF000:
 	{
@@ -118,17 +124,18 @@ void MMU::write_memory(const word& address, const byte& value)
 			working_ram_shadow[address - 0xF000] = value;
 
 		// Graphics RAM
-		if (address >= 0xFE00 && address <= 0xFE9F)
+		else if (address >= 0xFE00 && address <= 0xFE9F)
 			graphics_ram[address - 0xFE00] = value;
 
 		// Memory-mapped IO
-		if (address >= 0xFF00 && address <= 0xFF7F)
+		else if (address >= 0xFF00 && address <= 0xFF7F)
 			memory_mapped_io[address - 0xFF00] = value;
 
 		// Zero-page RAM
-		if (address >= 0xFF80 && address <= 0xFFFF)
+		else if (address >= 0xFF80 && address <= 0xFFFF)
 			zero_page_ram[address - 0xFF80] = value;
 	}
+	break;
 
 	default:
 		fprintf(stderr, "Unknown memory address!");
