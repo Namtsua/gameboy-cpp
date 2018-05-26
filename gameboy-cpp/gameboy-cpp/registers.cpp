@@ -462,6 +462,18 @@ void Registers::swap(const Register& r, const byte& value)
 	set_register(r, result);
 }
 
+void Registers::bit(const Register& r, const byte& bit)
+{
+	byte result = (get_register(r) >> bit) & 0x1;
+	if (result)
+		SET_FLAG(ZERO_FLAG);
+	else
+		CLEAR_FLAG(ZERO_FLAG);
+
+	CLEAR_FLAG(SUB_FLAG);
+	SET_FLAG(HALF_CARRY_FLAG);
+}
+
 void Registers::increment_register(const Register& r)
 {
 	byte result = get_register(r) + 1;

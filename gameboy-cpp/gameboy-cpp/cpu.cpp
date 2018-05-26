@@ -1062,8 +1062,6 @@ void CPU::CB(const byte& opcode)
 		m_registers.bit(reg, bit);
 		m_registers.increment_clock_cycles(8, 2);
 		break;
-
-
 	}
 }
 
