@@ -71,7 +71,8 @@ byte MMU::read_memory(const word& address) const
 
 word MMU::read_memory_u16(const word& address) const
 {
-	return read_memory(address) << 8 | read_memory(address + 1);
+//	return read_memory(address) << 8 | read_memory(address + 1);
+	return read_memory(address) | (read_memory(address + 1) << 8);
 }
 
 void MMU::write_memory(const word& address, const byte& value)
@@ -143,6 +144,7 @@ void MMU::write_memory(const word& address, const byte& value)
 	}
 }
 
+// check on this
 void MMU::write_memory_u16(const word& address, const word& value)
 {
 	write_memory(address, value >> 8);
