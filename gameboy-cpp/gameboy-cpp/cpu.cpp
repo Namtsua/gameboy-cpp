@@ -34,7 +34,6 @@ void CPU::cycle()
 	const word& sp = m_registers.get_stack_pointer();
 	const word& opcode = decode(pc);
 	//	fprintf(stderr, "Opcode received: ")
-	std::cout << std::hex << opcode << std::endl;
 	switch (opcode)
 	{
 		// LD <CReg>, <u16>

@@ -1,4 +1,6 @@
 #pragma once
+#define SDL_MAIN_HANDLED
+#include <SDL.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -31,7 +33,23 @@ enum CombinedRegister
 	R_AF,
 };
 
+enum Keys
+{
+	KEY_DEFAULT,
+	KEY_UP,
+	KEY_DOWN,
+	KEY_LEFT,
+	KEY_RIGHT,
+	KEY_A,
+	KEY_B,
+	KEY_START,
+	KEY_SELECT,
+	KEY_COUNT
+};
+
 namespace Contants
 {
 	const int REGISTER_COUNT = 8;
+	const int SCREEN_WIDTH = 640;
+	const int SCREEN_HEIGHT = 480;
 }

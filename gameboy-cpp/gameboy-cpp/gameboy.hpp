@@ -11,6 +11,7 @@ class GameBoy
 	public:
 		GameBoy();
 		~GameBoy();
+		void start();
 
 private:
 	Registers r;
