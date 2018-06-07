@@ -12,6 +12,8 @@ class GameBoy
 		GameBoy();
 		~GameBoy();
 		void start();
+		void cycle();
+		GPU* get_gpu() const;
 
 private:
 	Registers r;

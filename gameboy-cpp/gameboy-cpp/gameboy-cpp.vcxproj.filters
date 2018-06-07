@@ -30,9 +30,6 @@
     <ClCompile Include="registers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ops.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -45,9 +42,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="registers.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ops.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="mmu.hpp">

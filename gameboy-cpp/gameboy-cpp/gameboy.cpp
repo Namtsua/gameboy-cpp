@@ -1,19 +1,30 @@
 #include "gameboy.hpp"
 
-GameBoy::GameBoy() {}
 
+MMU* mmu = NULL;
+Cartridge* cart = NULL;
+CPU* cpu = NULL;
+GPU* gpu = NULL;
+
+GameBoy::GameBoy() {}
 GameBoy::~GameBoy() {}
 
 void GameBoy::start()
 {
-	MMU* mmu = new MMU();
-	Cartridge* cart = new Cartridge(mmu);
+	mmu = new MMU();
+	cart = new Cartridge(mmu);
 	cart->load("./roms/DMG_ROM.bin");
-	CPU* cpu = new CPU(mmu);
-	GPU* gpu = new GPU();
-	/*while (1)
-	{
-	cpu->cycle();
+	cpu = new CPU(mmu);
+	gpu = new GPU();
+}
+
+void GameBoy::cycle()
+{
+//	cpu->cycle();
 	gpu->cycle();
-	}*/
+}
+
+GPU* GameBoy::get_gpu() const
+{
+	return gpu;
 }

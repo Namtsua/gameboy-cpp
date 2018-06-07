@@ -134,7 +134,6 @@
     <ClCompile Include="gpu.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mmu.cpp" />
-    <ClCompile Include="ops.cpp" />
     <ClCompile Include="registers.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -143,7 +142,6 @@
     <ClInclude Include="gameboy.hpp" />
     <ClInclude Include="gpu.hpp" />
     <ClInclude Include="mmu.hpp" />
-    <ClInclude Include="ops.hpp" />
     <ClInclude Include="registers.hpp" />
   </ItemGroup>
   <ItemGroup>

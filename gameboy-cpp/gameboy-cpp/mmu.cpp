@@ -132,7 +132,6 @@ void MMU::write_memory(const word& address, const byte& value)
 		else if (address >= 0xFF00 && address <= 0xFF7F)
 			memory_mapped_io[address - 0xFF00] = value;
 
-		// Zero-page RAM
 		else if (address >= 0xFF80 && address <= 0xFFFF)
 			zero_page_ram[address - 0xFF80] = value;
 	}

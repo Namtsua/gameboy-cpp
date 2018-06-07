@@ -1,6 +1,6 @@
 #include "registers.hpp"
 
-using namespace Contants;
+using namespace Constants;
 
 void Registers::initialize()
 {

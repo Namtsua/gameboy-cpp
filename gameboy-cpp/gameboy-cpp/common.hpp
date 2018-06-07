@@ -7,6 +7,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <vector>
 
 typedef uint8_t byte;
 typedef int8_t ibyte;
@@ -47,9 +48,13 @@ enum Keys
 	KEY_COUNT
 };
 
-namespace Contants
+namespace Constants
 {
 	const int REGISTER_COUNT = 8;
-	const int SCREEN_WIDTH = 640;
-	const int SCREEN_HEIGHT = 480;
+	const int DISPLAY_WIDTH = 160;
+	const int DISPLAY_HEIGHT = 144;
+	const int RGBA_LENGTH = 4;
+//	const int SCREEN_WIDTH = 640;
+//	const int SCREEN_HEIGHT = 480;
+	const int TOTAL_SIZE = DISPLAY_WIDTH * DISPLAY_HEIGHT * RGBA_LENGTH;
 }
