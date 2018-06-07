@@ -7,7 +7,6 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-#include <vector>
 
 typedef uint8_t byte;
 typedef int8_t ibyte;

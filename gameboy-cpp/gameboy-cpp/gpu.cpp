@@ -39,9 +39,9 @@ void GPU::set_display_uniform_colour(const byte& r, const byte& g, const byte& b
 				}
 				else
 				{
-					display[i][j][0] = rand() % 255;
-					display[i][j][1] = rand() % 255;;
-					display[i][j][2] = rand() % 255;;
+					display[i][j][0] = r;
+					display[i][j][1] = g;
+					display[i][j][2] = b;
 				}
 			}
 }
