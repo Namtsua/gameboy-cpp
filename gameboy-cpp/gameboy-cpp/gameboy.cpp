@@ -15,7 +15,7 @@ void GameBoy::start()
 	cart = new Cartridge(mmu);
 	cart->load("./roms/DMG_ROM.bin");
 	cpu = new CPU(mmu);
-	gpu = new GPU();
+	gpu = new GPU(cpu, mmu);
 }
 
 void GameBoy::cycle()

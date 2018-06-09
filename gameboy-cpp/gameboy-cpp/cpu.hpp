@@ -10,7 +10,7 @@ public:
 	void cycle();
 	byte decode(const word& pc);
 	void CB(const byte& opcode);
-
+	std::pair<byte, byte> get_clock_cycles() const;
 
 private:
 	MMU * m_mmu;
@@ -29,5 +29,4 @@ private:
 	byte memory_value_u8;
 	word memory_value_u16;
 	byte bit;
-
 };

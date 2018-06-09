@@ -1202,3 +1202,8 @@ byte CPU::decode(const word& pc)
 {
 	return m_mmu->read_memory(pc);
 }
+
+std::pair<byte, byte> CPU::get_clock_cycles() const
+{
+	return m_registers.get_clock_cycles();
+}

@@ -66,6 +66,7 @@ public:
 	void decrement_register(const Register& r);
 	void decrement_register(const CombinedRegister& r);
 	void increment_clock_cycles(const byte& t_val, const byte& m_val);
+	std::pair<byte, byte> get_clock_cycles() const;
 
 	/*inline void set_zero_flag(const byte& reg)
 	{

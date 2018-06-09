@@ -52,7 +52,7 @@ byte MMU::read_memory(const word& address) const
 
 		// Graphics RAM
 		if (address >= 0xFE00 && address <= 0xFE9F)
-			return graphics_ram[address - 0xFE00];
+			return graphics_sprite_info[address - 0xFE00];
 
 		// Memory-mapped IO
 		if (address >= 0xFF00 && address <= 0xFF7F)
@@ -126,7 +126,7 @@ void MMU::write_memory(const word& address, const byte& value)
 
 		// Graphics RAM
 		else if (address >= 0xFE00 && address <= 0xFE9F)
-			graphics_ram[address - 0xFE00] = value;
+			graphics_sprite_info[address - 0xFE00] = value;
 
 		// Memory-mapped IO
 		else if (address >= 0xFF00 && address <= 0xFF7F)

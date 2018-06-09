@@ -810,3 +810,8 @@ void Registers::increment_clock_cycles(const byte& t_val, const byte& m_val)
 	t += t_val;
 	m += m_val;
 }
+
+std::pair<byte, byte> Registers::get_clock_cycles() const
+{
+	return std::make_pair(t, m);
+}
