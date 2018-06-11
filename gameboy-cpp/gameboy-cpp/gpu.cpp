@@ -120,6 +120,11 @@ byte GPU::read_lcd_control() const
 	return m_mmu->read_memory(LCD_CONTROL_LOCATION);
 }
 
+byte GPU::read_lcd_status() const
+{
+	return m_mmu->read_memory(LCD_STATUS_LOCATION);
+}
+
 byte GPU::read_scroll_y() const
 {
 	return m_mmu->read_memory(SCROLL_Y_LOCATION);
@@ -133,6 +138,29 @@ byte GPU::read_scroll_x() const
 byte GPU::read_scanline() const
 {
 	return m_mmu->read_memory(SCAN_LINE_LOCATION);
+}
+
+byte GPU::read_scanline_compare() const
+{
+	return m_mmu->read_memory(SCAN_LINE_COMPARE_LOCATION);
+}
+
+byte GPU::read_object_palette_0() const
+{
+	return m_mmu->read_memory(OBJECT_PALETTE_0_LOCATION);
+}
+byte GPU::read_object_palette_1() const
+{
+	return m_mmu->read_memory(OBJECT_PALETTE_0_LOCATION);
+}
+
+byte GPU::read_window_y() const
+{
+	return m_mmu->read_memory(WINDOW_Y_LOCATION);
+}
+byte GPU::read_window_x() const
+{
+	return m_mmu->read_memory(WINDOW_X_LOCATION);
 }
 
 void GPU::write_lcd_control()
@@ -150,6 +178,18 @@ void GPU::write_lcd_control()
 	m_mmu->write_memory(LCD_CONTROL_LOCATION, result);
 }
 
+void GPU::write_lcd_status()
+{
+	// TODO enforce read/write only
+	byte result = (gpu_mode)
+		| (coincidence_flag ? 0x1 : 0x0)
+		| (mode_0_hblank_interrupt ? 0x1 : 0x0)
+		| (mode_1_vblank_interrupt ? 0x1 : 0x0)
+		| (mode_2_oam_interrupt ? 0x1 : 0x0)
+		| (lyc_ly_coincidence_interrupt ? 0x1 : 0x0);
+
+	m_mmu->write_memory(LCD_STATUS_LOCATION, result);
+}
 void GPU::write_scroll_y(const byte& value)
 {
 	m_mmu->write_memory(SCROLL_Y_LOCATION, value);
@@ -160,7 +200,32 @@ void GPU::write_scroll_x(const byte& value)
 	m_mmu->write_memory(SCROLL_X_LOCATION, value);
 }
 
+void GPU::write_scanline_compare(const byte& value)
+{
+	m_mmu->write_memory(SCAN_LINE_COMPARE_LOCATION, value);
+}
+
 void GPU::write_bg_palette(const byte& value)
 {
 	m_mmu->write_memory(BG_PALETTE_LOCATION, value);
+}
+
+void GPU::write_object_palette_0(const byte& value)
+{
+	m_mmu->write_memory(OBJECT_PALETTE_0_LOCATION, value);
+}
+
+void GPU::write_object_palette_1(const byte& value)
+{
+	m_mmu->write_memory(OBJECT_PALETTE_1_LOCATION, value);
+}
+
+void GPU::write_window_y(const byte& value)
+{
+	m_mmu->write_memory(WINDOW_Y_LOCATION, value);
+}
+
+void GPU::write_window_x(const byte& value)
+{
+	m_mmu->write_memory(WINDOW_X_LOCATION, value);
 }
