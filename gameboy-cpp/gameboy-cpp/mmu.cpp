@@ -1,8 +1,11 @@
 #include "mmu.hpp"
 
+// TODO: Read ROM header for information about bank switching
+
 MMU::MMU()
 {
 	clear_memory();
+	initialize_bootloader();
 }
 
 MMU::~MMU() {}
@@ -113,16 +116,20 @@ void MMU::write_memory(const word& address, const byte& value)
 		working_ram[address - 0xC000] = value;
 		break;
 
-		// Working RAM (shadow)
+		// Working RAM (shadow) (also reflect in Working RAM)
 	case 0xE000:
 		working_ram_shadow[address - 0xE000] = value;
+		working_ram[address - 0xE000] = value;
 		break;
 
 	case 0xF000:
 	{
-		// Working RAM (shadow)
+		// Working RAM (shadow) (also reflect in Working RAM)
 		if (address >= 0xF000 && address <= 0xFDFF)
+		{
 			working_ram_shadow[address - 0xF000] = value;
+			working_ram[address - 0xF000] = value;
+		}
 
 		// Graphics RAM
 		else if (address >= 0xFE00 && address <= 0xFE9F)
