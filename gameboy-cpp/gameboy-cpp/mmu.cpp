@@ -137,7 +137,21 @@ void MMU::write_memory(const word& address, const byte& value)
 
 		// Memory-mapped IO
 		else if (address >= 0xFF00 && address <= 0xFF7F)
-			memory_mapped_io[address - 0xFF00] = value;
+		{
+			// reset current scanline if write attempt
+			if (address == 0xFF44)
+			{
+				memory_mapped_io[address - 0xFF00] = 0;
+			}
+			else if (address == 0xFF46)
+			{
+				direct_memory_address_transfer(value);
+			}
+			else
+			{
+				memory_mapped_io[address - 0xFF00] = value;
+			}
+		}
 
 		else if (address >= 0xFF80 && address <= 0xFFFF)
 			zero_page_ram[address - 0xFF80] = value;
@@ -157,7 +171,26 @@ void MMU::write_memory_u16(const word& address, const word& value)
 	write_memory(address + 1, value & 0xFF);
 }
 
+void MMU::direct_memory_address_transfer(const byte& value)
+{
+	// Source address will be divided by 100, so shift by 8 to multiply by 100
+	word address = value << 8;
+	// Write to OAM (sprite RAM)
+	for (int i = 0x0; i < 0xA0; ++i)
+		write_memory(0xFE00 + i, read_memory(address + i));
+}
+
 byte* MMU::get_rom_space()
 {
 	return cartridge_bank;
+}
+
+void MMU::set_current_scanline(const byte& value)
+{
+	memory_mapped_io[current_scanline - 0xFF00] = value;
+}
+
+void MMU::increment_current_scanline()
+{
+	++memory_mapped_io[current_scanline - 0xFF00];
 }

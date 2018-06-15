@@ -9,6 +9,7 @@
 #define sprite_info_size 0xA0
 #define mapped_io_size 0x80
 #define zero_page_size 0x80
+#define current_scanline 0xFF44
 
 class MMU
 {
@@ -19,8 +20,10 @@ public:
 	word read_memory_u16(const word& address) const;
 	void write_memory(const word& address, const byte& value);
 	void write_memory_u16(const word& address, const word& value);
+	void direct_memory_address_transfer(const byte& value);
 	byte* get_rom_space();
-	
+	void set_current_scanline(const byte& value);
+	void increment_current_scanline();
 
 
 	inline void clear_memory()
