@@ -14,8 +14,20 @@ GPU::~GPU() {}
 
 void GPU::cycle()
 {
+	// Set LCD status
+	write_lcd_status();
+	
 	// Update GPU mode clock
 	gpu_mode_clock += m_cpu->get_clock_cycles().first;
+
+	// Read LCD control
+	read_lcd_control();
+
+	// Return if LCD is off
+	if (!lcd_display_enable)
+		return;
+
+	
 
 	switch (gpu_mode)
 	{
@@ -38,10 +50,10 @@ void GPU::cycle()
 		if (gpu_mode_clock >= HORIZONTAL_BLANK_CYCLES)
 		{
 			gpu_mode_clock = 0;
-			line += 1;
+			m_mmu->increment_current_scanline();
 
 			// Check if last horizontal blank
-			if (line == 144)
+			if (read_scanline() == 144)
 			{
 				gpu_mode = VERTICAL_BLANK;
 				draw = true;
@@ -56,12 +68,12 @@ void GPU::cycle()
 		if (gpu_mode_clock >= VERTICAL_BLANK_CYCLES)
 		{
 			gpu_mode_clock = 0;
-			line += 1;
+			m_mmu->increment_current_scanline();
 
-			if (line > 153)
+			if (read_scanline() > 153)
 			{
 				gpu_mode = OAM_READ_MODE;
-				line = 0;
+				m_mmu->set_current_scanline(0);
 			}
 		}
 		break;
@@ -115,14 +127,28 @@ void GPU::set_draw_flag(const bool& enable)
 	draw = enable;
 }
 
-byte GPU::read_lcd_control() const
+void GPU::read_lcd_control()
 {
-	return m_mmu->read_memory(LCD_CONTROL_LOCATION);
+	byte lcd_control = m_mmu->read_memory(LCD_CONTROL_LOCATION);
+	bg_display_enable = lcd_control & 0x1;
+	sprite_display_enable = (lcd_control >> 1) & 0x1;
+	sprite_size = (lcd_control >> 2) & 0x1;
+	bg_tile_map = (lcd_control >> 3) & 0x1;
+	bg_tile_set = (lcd_control >> 4) & 0x1;
+	window_display_enable = (lcd_control >> 5) & 0x1;
+	window_tile_map = (lcd_control >> 6) & 0x1;
+	lcd_display_enable = (lcd_control >> 7) & 0x1;
 }
 
-byte GPU::read_lcd_status() const
+void GPU::read_lcd_status()
 {
-	return m_mmu->read_memory(LCD_STATUS_LOCATION);
+	byte lcd_status = m_mmu->read_memory(LCD_STATUS_LOCATION);
+	gpu_mode = lcd_status & 0x3;
+	coincidence_flag = (lcd_status >> 2) & 0x1;
+	mode_0_hblank_interrupt = (lcd_status >> 3) & 0x1;
+	mode_1_vblank_interrupt = (lcd_status >> 4) & 0x1;
+	mode_2_oam_interrupt = (lcd_status >> 5) & 0x1;
+	lyc_ly_coincidence_interrupt = (lcd_status >> 6) & 0x1;
 }
 
 byte GPU::read_scroll_y() const
@@ -166,14 +192,14 @@ byte GPU::read_window_x() const
 void GPU::write_lcd_control()
 {
 	// form LCD control byte
-	byte result = (switch_bg ? 0x1 : 0x0)
-		| (switch_sprites ? 0x1 : 0x0)
-		| (sprites_size ? 0x1 : 0x0)
-		| (bg_tile_map ? 0x1 : 0x0)
-		| (bg_tile_set ? 0x1 : 0x0)
-		| (switch_window ? 0x1 : 0x0)
-		| (window_tile_map ? 0x1 : 0x0)
-		| (switch_display ? 0x1 : 0x0);
+	byte result = (lcd_display_enable << 7)
+		| (window_tile_map << 6)
+		| (window_display_enable << 5)
+		| (bg_tile_set << 4)
+		| (bg_tile_map << 3)
+		| (sprite_size << 2)
+		| (sprite_display_enable << 1)
+		| (bg_display_enable);
 
 	m_mmu->write_memory(LCD_CONTROL_LOCATION, result);
 }
@@ -181,12 +207,12 @@ void GPU::write_lcd_control()
 void GPU::write_lcd_status()
 {
 	// TODO enforce read/write only
-	byte result = (gpu_mode)
-		| (coincidence_flag ? 0x1 : 0x0)
-		| (mode_0_hblank_interrupt ? 0x1 : 0x0)
-		| (mode_1_vblank_interrupt ? 0x1 : 0x0)
-		| (mode_2_oam_interrupt ? 0x1 : 0x0)
-		| (lyc_ly_coincidence_interrupt ? 0x1 : 0x0);
+	byte result = (lyc_ly_coincidence_interrupt << 6)
+		| (mode_2_oam_interrupt << 5)
+		| (mode_1_vblank_interrupt << 4)
+		| (mode_0_hblank_interrupt << 3)
+		| (coincidence_flag << 2)
+		| (gpu_mode);
 
 	m_mmu->write_memory(LCD_STATUS_LOCATION, result);
 }

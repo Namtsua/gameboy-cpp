@@ -42,8 +42,8 @@ public:
 	void set_display_uniform_colour(const byte& r, const byte& g, const byte& b);
 	bool get_draw_flag() const;
 	void set_draw_flag(const bool& enable);
-	byte read_lcd_control() const;
-	byte read_lcd_status() const;
+	void read_lcd_control();
+	void read_lcd_status();
 	byte read_scroll_y() const;
 	byte read_scroll_x() const;
 	byte read_scanline() const;
@@ -71,14 +71,14 @@ private:
 	byte scroll_x;
 	byte scroll_y;
 	// LCD Control Register
-	byte switch_bg;
-	byte switch_sprites;
-	byte sprites_size;
+	byte bg_display_enable;
+	byte sprite_display_enable;
+	byte sprite_size;
 	byte bg_tile_map;
 	byte bg_tile_set;
-	byte switch_window;
+	byte window_display_enable;
 	byte window_tile_map;
-	byte switch_display;
+	byte lcd_display_enable;
 	// LCD Status Register
 	byte gpu_mode;
 	byte coincidence_flag;
