@@ -7,7 +7,7 @@ GPU::GPU(CPU* cpu, MMU* mmu)
 	m_mmu = mmu;
 	gpu_mode = 0;
 	gpu_mode_clock = 0;
-	line;
+	scanline = 0;
 }
 
 GPU::~GPU() {}
@@ -96,6 +96,26 @@ void GPU::clear_display()
 
 void GPU::render_scanline()
 {
+	// Read LCD control settings
+	read_lcd_control();
+
+	// Render tiles if background is displayed
+	if (bg_display_enable)
+		render_tiles();
+
+	// Render sprites if sprites are displayed
+	if (sprite_display_enable)
+		render_sprites();
+}
+
+void GPU::render_tiles()
+{
+
+}
+
+void GPU::render_sprites()
+{
+
 }
 
 void GPU::set_display_uniform_colour(const byte& r, const byte& g, const byte& b)
@@ -151,19 +171,19 @@ void GPU::read_lcd_status()
 	lyc_ly_coincidence_interrupt = (lcd_status >> 6) & 0x1;
 }
 
-byte GPU::read_scroll_y() const
+void GPU::read_scroll_y()
 {
-	return m_mmu->read_memory(SCROLL_Y_LOCATION);
+	scroll_y =  m_mmu->read_memory(SCROLL_Y_LOCATION);
 }
 
-byte GPU::read_scroll_x() const
+void GPU::read_scroll_x()
 {
-	return m_mmu->read_memory(SCROLL_X_LOCATION);
+	scroll_x = m_mmu->read_memory(SCROLL_X_LOCATION);
 }
 
-byte GPU::read_scanline() const
+void GPU::read_scanline()
 {
-	return m_mmu->read_memory(SCAN_LINE_LOCATION);
+	scanline = m_mmu->read_memory(SCAN_LINE_LOCATION);
 }
 
 byte GPU::read_scanline_compare() const
@@ -175,6 +195,7 @@ byte GPU::read_object_palette_0() const
 {
 	return m_mmu->read_memory(OBJECT_PALETTE_0_LOCATION);
 }
+
 byte GPU::read_object_palette_1() const
 {
 	return m_mmu->read_memory(OBJECT_PALETTE_0_LOCATION);

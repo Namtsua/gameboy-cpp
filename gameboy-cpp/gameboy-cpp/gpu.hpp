@@ -39,14 +39,16 @@ public:
 	void clear_display();
 	void clear_tileset();
 	void render_scanline();
+	void render_tiles();
+	void render_sprites();
 	void set_display_uniform_colour(const byte& r, const byte& g, const byte& b);
 	bool get_draw_flag() const;
 	void set_draw_flag(const bool& enable);
 	void read_lcd_control();
 	void read_lcd_status();
-	byte read_scroll_y() const;
-	byte read_scroll_x() const;
-	byte read_scanline() const;
+	void read_scroll_y();
+	void read_scroll_x();
+	void read_scanline();
 	byte read_scanline_compare() const;
 	byte read_object_palette_0() const;
 	byte read_object_palette_1() const;
@@ -87,6 +89,6 @@ private:
 	byte mode_2_oam_interrupt;
 	byte lyc_ly_coincidence_interrupt;
 
-	int line;
+	byte scanline;
 	bool draw = false;
 };
