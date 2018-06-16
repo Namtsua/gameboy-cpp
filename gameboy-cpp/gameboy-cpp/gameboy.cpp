@@ -20,7 +20,7 @@ void GameBoy::start()
 
 void GameBoy::cycle()
 {
-//	cpu->cycle();
+	cpu->cycle();
 	gpu->cycle();
 }
 

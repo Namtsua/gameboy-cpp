@@ -44,6 +44,7 @@ public:
 	void set_display_uniform_colour(const byte& r, const byte& g, const byte& b);
 	bool get_draw_flag() const;
 	void set_draw_flag(const bool& enable);
+	void set_lcd_status();
 	void read_lcd_control();
 	void read_lcd_status();
 	void read_scroll_y();

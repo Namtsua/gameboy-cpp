@@ -14,11 +14,11 @@ GPU::~GPU() {}
 
 void GPU::cycle()
 {
-	// Set LCD status
-	write_lcd_status();
-	
 	// Update GPU mode clock
 	gpu_mode_clock += m_cpu->get_clock_cycles().first;
+
+	// Set LCD status
+	write_lcd_status();
 
 	// Read LCD control
 	read_lcd_control();
@@ -51,12 +51,13 @@ void GPU::cycle()
 		{
 			gpu_mode_clock = 0;
 			m_mmu->increment_current_scanline();
-
+			read_scanline();
 			// Check if last horizontal blank
-			if (read_scanline() == 144)
+			if (scanline == 144)
 			{
 				gpu_mode = VERTICAL_BLANK;
 				draw = true;
+				// request interrupt?
 			}
 			else
 			{
@@ -69,8 +70,9 @@ void GPU::cycle()
 		{
 			gpu_mode_clock = 0;
 			m_mmu->increment_current_scanline();
+			read_scanline();
 
-			if (read_scanline() > 153)
+			if (scanline > 153)
 			{
 				gpu_mode = OAM_READ_MODE;
 				m_mmu->set_current_scanline(0);
@@ -145,6 +147,54 @@ bool GPU::get_draw_flag() const
 void GPU::set_draw_flag(const bool& enable)
 {
 	draw = enable;
+}
+
+// Figure out if this is needed or is already done
+void GPU::set_lcd_status()
+{
+	read_lcd_status();
+	if (!lcd_display_enable)
+	{
+		// scanline counter?
+		m_mmu->set_current_scanline(0);
+		gpu_mode = VERTICAL_BLANK;
+		write_lcd_status();
+		return;
+	}
+
+	byte new_mode = 0;
+	bool interrupt_required = false;
+
+	if (scanline >= 144)
+	{
+		new_mode = VERTICAL_BLANK;
+		interrupt_required = mode_1_vblank_interrupt;
+	}
+	else
+	{
+		if (gpu_mode_clock <= OAM_READ_MODE_CYCLES)
+		{
+			new_mode = OAM_READ_MODE;
+			interrupt_required = mode_2_oam_interrupt;
+		}
+		else if (gpu_mode <= VRAM_READ_MODE_CYCLES)
+		{
+			new_mode = VRAM_READ_MODE;
+		}
+		else
+		{
+			new_mode = HORIZONTAL_BLANK;
+			interrupt_required = mode_0_hblank_interrupt;
+		}
+	}
+
+	if (interrupt_required && (new_mode != gpu_mode))
+	{
+		// Request an interrupt
+	}
+
+	// do a bit more
+	write_lcd_status();
 }
 
 void GPU::read_lcd_control()
