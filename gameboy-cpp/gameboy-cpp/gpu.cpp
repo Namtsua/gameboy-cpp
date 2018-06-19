@@ -14,24 +14,35 @@ GPU::~GPU() {}
 
 void GPU::cycle()
 {
-	// Update GPU mode clock
-	gpu_mode_clock += m_cpu->get_clock_cycles().first;
 
 	// Set LCD status
-	write_lcd_status();
+	set_lcd_status();
 
 	// Read LCD control
 	read_lcd_control();
 
-	// Return if LCD is off
-	if (!lcd_display_enable)
+	// Update GPU clock if LCD is on, return if LCD is off
+	if (lcd_display_enable)
+	{
+		// Update GPU mode clock
+		gpu_mode_clock += m_cpu->get_clock_cycles().first;
+	}
+	else
+	{
 		return;
+	}
 
-	
+	handle_gpu_mode();
 
+}
+
+void GPU::handle_gpu_mode()
+{
+	// Handle current GPU mode
 	switch (gpu_mode)
 	{
 	case OAM_READ_MODE:
+		// Check to enter Mode 3 (Read VRAM)
 		if (gpu_mode_clock >= OAM_READ_MODE_CYCLES)
 		{
 			gpu_mode_clock = 0;
@@ -39,6 +50,7 @@ void GPU::cycle()
 		}
 		break;
 	case VRAM_READ_MODE:
+		// Check to enter Mode 0 (Horizontal Blank)
 		if (gpu_mode_clock >= VRAM_READ_MODE_CYCLES)
 		{
 			gpu_mode_clock = 0;
@@ -47,6 +59,7 @@ void GPU::cycle()
 		}
 		break;
 	case HORIZONTAL_BLANK:
+		// Check to enter either Mode 1 (Vertical Blank) or Mode 2 (Read OAM)
 		if (gpu_mode_clock >= HORIZONTAL_BLANK_CYCLES)
 		{
 			gpu_mode_clock = 0;
@@ -66,6 +79,7 @@ void GPU::cycle()
 		}
 		break;
 	case VERTICAL_BLANK:
+		// Check to potentially enter Mode 2 (Read OAm)
 		if (gpu_mode_clock >= VERTICAL_BLANK_CYCLES)
 		{
 			gpu_mode_clock = 0;
@@ -153,9 +167,11 @@ void GPU::set_draw_flag(const bool& enable)
 void GPU::set_lcd_status()
 {
 	read_lcd_status();
+	read_scanline();
+
 	if (!lcd_display_enable)
 	{
-		// scanline counter?
+		gpu_mode_clock = 0;
 		m_mmu->set_current_scanline(0);
 		gpu_mode = VERTICAL_BLANK;
 		write_lcd_status();
@@ -165,6 +181,7 @@ void GPU::set_lcd_status()
 	byte new_mode = 0;
 	bool interrupt_required = false;
 
+	// Scanline outside of display, enter vertical blank mode
 	if (scanline >= 144)
 	{
 		new_mode = VERTICAL_BLANK;
@@ -190,10 +207,25 @@ void GPU::set_lcd_status()
 
 	if (interrupt_required && (new_mode != gpu_mode))
 	{
+		//gpu_mode = new_mode; // should change the mode
 		// Request an interrupt
 	}
 
-	// do a bit more
+	// Check coincidence flag (not sure if right thing to check)
+	if (scanline == read_scanline_compare())
+	{
+		coincidence_flag = 0x1;
+		if (lyc_ly_coincidence_interrupt)
+		{
+			// Request an interrupt
+		}
+	}
+	else
+	{
+		coincidence_flag = 0x0;
+	}
+
+	// Update in memory
 	write_lcd_status();
 }
 

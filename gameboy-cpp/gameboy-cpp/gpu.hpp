@@ -35,6 +35,7 @@ public:
 	GPU(CPU* cpu, MMU* mmu);
 	~GPU();
 	void cycle();
+	void handle_gpu_mode();
 	void reset();
 	void clear_display();
 	void clear_tileset();
