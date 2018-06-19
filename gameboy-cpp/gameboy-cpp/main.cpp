@@ -31,17 +31,17 @@ int main(int argc, char* argv[])
 		if (m_gpu->get_draw_flag())
 			draw_frame();
 
-		while (SDL_PollEvent(&event) != 0)
-		{
-			if (event.type == SDL_QUIT)
-			{
-				quit = true;
-			}
-			else if (event.type == SDL_KEYDOWN)
-			{
-				// switch case to handle key presses
-			}
-		}
+		//while (SDL_PollEvent(&event) != 0)
+		//{
+		//	if (event.type == SDL_QUIT)
+		//	{
+		//		quit = true;
+		//	}
+		//	else if (event.type == SDL_KEYDOWN)
+		//	{
+		//		// switch case to handle key presses
+		//	}
+		//}
 	}
 
 

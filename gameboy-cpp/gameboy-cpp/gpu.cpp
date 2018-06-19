@@ -5,7 +5,7 @@ GPU::GPU(CPU* cpu, MMU* mmu)
 	reset();
 	m_cpu = cpu;
 	m_mmu = mmu;
-	gpu_mode = 0;
+	gpu_mode = VERTICAL_BLANK;
 	gpu_mode_clock = 0;
 	scanline = 0;
 }
@@ -14,26 +14,18 @@ GPU::~GPU() {}
 
 void GPU::cycle()
 {
-
-	// Set LCD status
-	set_lcd_status();
-
 	// Read LCD control
 	read_lcd_control();
 
 	// Update GPU clock if LCD is on, return if LCD is off
-	if (lcd_display_enable)
-	{
-		// Update GPU mode clock
-		gpu_mode_clock += m_cpu->get_clock_cycles().first;
-	}
-	else
-	{
+	if (!lcd_display_enable)
 		return;
-	}
 
+	// Update GPU mode clock
+	gpu_mode_clock += m_cpu->get_clock_cycles().first;
+
+	// Update GPU based on mode
 	handle_gpu_mode();
-
 }
 
 void GPU::handle_gpu_mode()
@@ -56,6 +48,10 @@ void GPU::handle_gpu_mode()
 			gpu_mode_clock = 0;
 			gpu_mode = HORIZONTAL_BLANK;
 			render_scanline();
+			if (mode_0_hblank_interrupt)
+			{
+				// Send interrupt
+			}
 		}
 		break;
 	case HORIZONTAL_BLANK:
@@ -65,16 +61,25 @@ void GPU::handle_gpu_mode()
 			gpu_mode_clock = 0;
 			m_mmu->increment_current_scanline();
 			read_scanline();
+
 			// Check if last horizontal blank
 			if (scanline == 144)
 			{
 				gpu_mode = VERTICAL_BLANK;
 				draw = true;
-				// request interrupt?
+				// Trigger interrupt
+				if (mode_1_vblank_interrupt)
+				{
+					// Send interrupt
+				}
 			}
 			else
 			{
 				gpu_mode = OAM_READ_MODE;
+				if (mode_2_oam_interrupt)
+				{
+					// Send interrupt
+				}
 			}
 		}
 		break;
@@ -90,10 +95,31 @@ void GPU::handle_gpu_mode()
 			{
 				gpu_mode = OAM_READ_MODE;
 				m_mmu->set_current_scanline(0);
+				if (mode_2_oam_interrupt)
+				{
+					// Send interrupt
+				}
 			}
 		}
 		break;
 	}
+
+	// Check coincidence flag (not sure if right thing to check)
+	if (read_scanline_compare() == scanline)
+	{
+		coincidence_flag = 0x1;
+		if (lyc_ly_coincidence_interrupt)
+		{
+			// Request an interrupt
+		}
+	}
+	else
+	{
+		coincidence_flag = 0x0;
+	}
+
+	// Update in memory
+	write_lcd_status();
 }
 
 void GPU::reset()
@@ -163,12 +189,9 @@ void GPU::set_draw_flag(const bool& enable)
 	draw = enable;
 }
 
-// Figure out if this is needed or is already done
+// Not sure if needed
 void GPU::set_lcd_status()
 {
-	read_lcd_status();
-	read_scanline();
-
 	if (!lcd_display_enable)
 	{
 		gpu_mode_clock = 0;
@@ -177,56 +200,6 @@ void GPU::set_lcd_status()
 		write_lcd_status();
 		return;
 	}
-
-	byte new_mode = 0;
-	bool interrupt_required = false;
-
-	// Scanline outside of display, enter vertical blank mode
-	if (scanline >= 144)
-	{
-		new_mode = VERTICAL_BLANK;
-		interrupt_required = mode_1_vblank_interrupt;
-	}
-	else
-	{
-		if (gpu_mode_clock <= OAM_READ_MODE_CYCLES)
-		{
-			new_mode = OAM_READ_MODE;
-			interrupt_required = mode_2_oam_interrupt;
-		}
-		else if (gpu_mode <= VRAM_READ_MODE_CYCLES)
-		{
-			new_mode = VRAM_READ_MODE;
-		}
-		else
-		{
-			new_mode = HORIZONTAL_BLANK;
-			interrupt_required = mode_0_hblank_interrupt;
-		}
-	}
-
-	if (interrupt_required && (new_mode != gpu_mode))
-	{
-		//gpu_mode = new_mode; // should change the mode
-		// Request an interrupt
-	}
-
-	// Check coincidence flag (not sure if right thing to check)
-	if (scanline == read_scanline_compare())
-	{
-		coincidence_flag = 0x1;
-		if (lyc_ly_coincidence_interrupt)
-		{
-			// Request an interrupt
-		}
-	}
-	else
-	{
-		coincidence_flag = 0x0;
-	}
-
-	// Update in memory
-	write_lcd_status();
 }
 
 void GPU::read_lcd_control()
