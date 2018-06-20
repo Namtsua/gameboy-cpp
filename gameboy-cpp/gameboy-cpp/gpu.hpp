@@ -48,7 +48,6 @@ public:
 	void clear_tileset();
 	void render_scanline();
 	void render_background_scanline();
-	void render_tiles();
 	Colour get_colour_from_palette(const byte& colour_id);
 	void render_sprites();
 	void render_frame();

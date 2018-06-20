@@ -267,39 +267,6 @@ void GPU::render_background_scanline()
 	}
 }
 
-void GPU::render_tiles()
-{
-	// Check if window is enabled and if window is visible relative to scanline
-	bool window_visible = window_display_enable && window_y <= scanline;
-
-	// Tiles start at 0x8000
-	word tile_memory_region = TILE_LOCATION;
-
-	// If bit is disabled, then tiles start at 0x8800
-	if (!bg_tile_set_region)
-		tile_memory_region += TILE_LOCATION_MODIFIER;
-
-	// Backgrounds start at 0x9800
-	word background_memory_region = BACKGROUND_LOCATION;
-
-	// Change background memory location if window not visible
-	if (!window_visible && bg_and_window_tile_map_region)
-		background_memory_region += BACKGROUND_LOCATION_MODIFIER;
-	// Change background memory location if window is visible
-	else if (window_display_enable && window_tile_map_region)
-		background_memory_region += BACKGROUND_LOCATION_MODIFIER;
-
-	// Need to get the identifier
-	word tile_start_address = tile_memory_region;
-
-	if (!bg_tile_set_region)
-		tile_start_address += (/*identifier*/ +128) * TILE_SIZE;
-	else
-		tile_start_address += (/*identifier*/ +0) * TILE_SIZE;
-
-	//Colour colour_to_draw = get_colour_from_palette(, BG_PALETTE_LOCATION)
-}
-
 Colour GPU::get_colour_from_palette(const byte& colour_id)
 {
 	// Initialize to white in case something goes wrong
