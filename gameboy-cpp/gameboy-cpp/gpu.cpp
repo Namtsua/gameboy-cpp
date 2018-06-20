@@ -1,10 +1,11 @@
 #include "gpu.hpp"
 
-GPU::GPU(CPU* cpu, MMU* mmu)
+GPU::GPU(CPU* cpu, MMU* mmu, SDL_Renderer* renderer)
 {
 	reset();
 	m_cpu = cpu;
 	m_mmu = mmu;
+	m_renderer = renderer;
 	gpu_mode = VERTICAL_BLANK;
 	gpu_mode_clock = 0;
 	scanline = 0;
@@ -66,7 +67,7 @@ void GPU::handle_gpu_mode()
 			if (scanline == 144)
 			{
 				gpu_mode = VERTICAL_BLANK;
-				draw = true;
+				render_frame();
 				// Trigger interrupt
 				if (mode_1_vblank_interrupt)
 				{
@@ -152,12 +153,78 @@ void GPU::render_scanline()
 
 void GPU::render_tiles()
 {
+	// Read all releveant coordinates from memory
+	read_display_coordinates();
 
+	// Tiles start at 0x8000
+	word tile_memory_region = TILE_LOCATION;
+
+	// If bit is disabled, then tiles start at 0x8800
+	if (!bg_tile_set_region)
+		tile_memory_region += TILE_LOCATION_MODIFIER;
+
+	// Need to get the identifier
+	word tile_start_address = tile_memory_region;
+
+	if (!bg_tile_set_region)
+		tile_start_address += (/*identifier*/ +128) * TILE_SIZE;
+	else
+		tile_start_address += (/*identifier*/ +0) * TILE_SIZE;
+}
+
+Colour GPU::get_colour_from_palette(const byte& colour_id, const word& address)
+{
+	// Initialize to white in case something goes wrong
+	Colour colour = WHITE;
+
+	// Retrieve palette
+	const byte& palette = m_mmu->read_memory(address);
+
+	// Retrieve colour from palette based on id
+	switch (colour_id)
+	{
+	case 0x00:
+		colour = static_cast<Colour>(palette & 0x3);
+		break;
+	case 0x01:
+		colour = static_cast<Colour>((palette >> 2) & 0x3);
+		break;
+	case 0x10:
+		colour = static_cast<Colour>((palette >> 4) & 0x3);
+		break;
+	case 0x11:
+		colour = static_cast<Colour>((palette >> 6) & 0x3);
+		break;
+	default:
+		fprintf(stderr, "Invalid colour ID provided");
+	}
+
+	// Return retrieved colour
+	return colour;
 }
 
 void GPU::render_sprites()
 {
+}
 
+void GPU::render_frame()
+{
+	// Colour the frame pixel by pixel
+	for (int i = 0; i < 144; ++i)
+	{
+		for (int j = 0; j < 160; ++j)
+		{
+			byte r = display[i][j][0];
+			byte g = display[i][j][1];
+			byte b = display[i][j][2];
+			byte a = display[i][j][3];
+			SDL_SetRenderDrawColor(m_renderer, r, g, b, a);
+			SDL_RenderDrawPoint(m_renderer, j, i);
+		}
+	}
+
+	// Update window
+	SDL_RenderPresent(m_renderer);
 }
 
 void GPU::set_display_uniform_colour(const byte& r, const byte& g, const byte& b)
@@ -179,16 +246,6 @@ void GPU::set_display_uniform_colour(const byte& r, const byte& g, const byte& b
 			}
 }
 
-bool GPU::get_draw_flag() const
-{
-	return draw;
-}
-
-void GPU::set_draw_flag(const bool& enable)
-{
-	draw = enable;
-}
-
 // Not sure if needed
 void GPU::set_lcd_status()
 {
@@ -202,16 +259,24 @@ void GPU::set_lcd_status()
 	}
 }
 
+void GPU::read_display_coordinates()
+{
+	read_scroll_y();
+	read_scroll_x();
+	read_window_y();
+	read_window_x();
+}
+
 void GPU::read_lcd_control()
 {
 	byte lcd_control = m_mmu->read_memory(LCD_CONTROL_LOCATION);
 	bg_display_enable = lcd_control & 0x1;
 	sprite_display_enable = (lcd_control >> 1) & 0x1;
 	sprite_size = (lcd_control >> 2) & 0x1;
-	bg_tile_map = (lcd_control >> 3) & 0x1;
-	bg_tile_set = (lcd_control >> 4) & 0x1;
+	bg_tile_map_region = (lcd_control >> 3) & 0x1;
+	bg_tile_set_region = (lcd_control >> 4) & 0x1;
 	window_display_enable = (lcd_control >> 5) & 0x1;
-	window_tile_map = (lcd_control >> 6) & 0x1;
+	window_tile_map_region = (lcd_control >> 6) & 0x1;
 	lcd_display_enable = (lcd_control >> 7) & 0x1;
 }
 
@@ -228,7 +293,7 @@ void GPU::read_lcd_status()
 
 void GPU::read_scroll_y()
 {
-	scroll_y =  m_mmu->read_memory(SCROLL_Y_LOCATION);
+	scroll_y = m_mmu->read_memory(SCROLL_Y_LOCATION);
 }
 
 void GPU::read_scroll_x()
@@ -256,23 +321,24 @@ byte GPU::read_object_palette_1() const
 	return m_mmu->read_memory(OBJECT_PALETTE_0_LOCATION);
 }
 
-byte GPU::read_window_y() const
+void GPU::read_window_y()
 {
-	return m_mmu->read_memory(WINDOW_Y_LOCATION);
+	window_y = m_mmu->read_memory(WINDOW_Y_LOCATION);
 }
-byte GPU::read_window_x() const
+void GPU::read_window_x()
 {
-	return m_mmu->read_memory(WINDOW_X_LOCATION);
+	// Substraction is necessary
+	window_x = m_mmu->read_memory(WINDOW_X_LOCATION) - 7;
 }
 
 void GPU::write_lcd_control()
 {
 	// form LCD control byte
 	byte result = (lcd_display_enable << 7)
-		| (window_tile_map << 6)
+		| (window_tile_map_region << 6)
 		| (window_display_enable << 5)
-		| (bg_tile_set << 4)
-		| (bg_tile_map << 3)
+		| (bg_tile_set_region << 4)
+		| (bg_tile_map_region << 3)
 		| (sprite_size << 2)
 		| (sprite_display_enable << 1)
 		| (bg_display_enable);

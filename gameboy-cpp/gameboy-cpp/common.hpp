@@ -48,6 +48,14 @@ enum Keys
 	KEY_COUNT
 };
 
+enum Colour
+{
+	WHITE,
+	LIGHT_GREY,
+	DARK_GREY,
+	BLACK
+};
+
 namespace Constants
 {
 	const int REGISTER_COUNT = 8;
