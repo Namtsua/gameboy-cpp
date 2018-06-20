@@ -9,11 +9,10 @@
 class GameBoy
 {
 	public:
-		GameBoy();
+		GameBoy(SDL_Renderer* renderer);
 		~GameBoy();
 		void start();
 		void cycle();
-		GPU* get_gpu() const;
 
 private:
 	Registers r;

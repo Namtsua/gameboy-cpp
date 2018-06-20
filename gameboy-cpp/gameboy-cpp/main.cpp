@@ -20,16 +20,12 @@ int main(int argc, char* argv[])
 	if (!init_SDL())
 		exit(1);
 
-	GameBoy* gb = new GameBoy();
+	GameBoy* gb = new GameBoy(renderer);
 	gb->start();
-	m_gpu = gb->get_gpu();
 	bool quit = false;
 	while (!quit)
 	{
 		gb->cycle();
-
-		if (m_gpu->get_draw_flag())
-			draw_frame();
 
 		//while (SDL_PollEvent(&event) != 0)
 		//{
@@ -95,27 +91,4 @@ void close_SDL()
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyTexture(texture);
 	SDL_Quit();
-}
-
-void draw_frame()
-{
-	// Colour the frame pixel by pixel
-	for (int i = 0; i < 144; ++i)
-	{
-		for (int j = 0; j < 160; ++j)
-		{
-			byte r = m_gpu->display[i][j][0];
-			byte g = m_gpu->display[i][j][1];
-			byte b = m_gpu->display[i][j][2];
-			byte a = m_gpu->display[i][j][3];
-			SDL_SetRenderDrawColor(renderer, r, g, b, a);
-			SDL_RenderDrawPoint(renderer, j, i);
-		}
-	}
-
-	// Update window
-	SDL_RenderPresent(renderer);
-
-	// Disable draw flag
-	m_gpu->set_draw_flag(false);
 }
