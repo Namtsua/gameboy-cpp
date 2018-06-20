@@ -142,19 +142,135 @@ void GPU::render_scanline()
 	// Read LCD control settings
 	read_lcd_control();
 
-	// Render tiles if background is displayed
-	if (bg_display_enable)
-		render_tiles();
+	// Read current scanline
+	read_scanline();
+
+	// Read all relevant coordinates from memory
+	read_display_coordinates();
+
+	// Render background scanline
+	render_background_scanline();
 
 	// Render sprites if sprites are displayed
 	if (sprite_display_enable)
 		render_sprites();
 }
 
+void GPU::render_background_scanline()
+{
+	// Render background if enabled
+	if (bg_display_enable)
+	{
+		// Background identity map start at 0x9800
+		word background_tile_map_region = BACKGROUND_LOCATION;
+
+		// If bit 3 is set, then background identity map starts at 0x9C00
+		if (bg_tile_map_region)
+			background_tile_map_region += BACKGROUND_LOCATION_MODIFIER;
+
+		// Background tile data
+		word background_tile_data_region = TILE_LOCATION;
+
+		// If bit 4 is set, then we read from 0x8000 and the identifier is unsigned
+		if (bg_and_window_tile_map_region)
+			background_tile_map_region += BACKGROUND_LOCATION_MODIFIER;
+
+		// Calculate the y coordinate from current scanline and scroll_y
+		const byte& background_y_coordinate = scanline + scroll_y;
+
+		// Calculate tile number by dividing by 8 (# of lines in a map) and MOD by 32 (# of tiles in BG map)
+		const byte& background_y_tile = (background_y_coordinate / 8) % 32;
+
+		// Calculate tile offset (MOD by number of pixels in a tile);
+		const byte& background_y_tile_offset = background_y_coordinate % 8;
+
+		// Render the rest of the line
+		for (int x = 0; x < DISPLAY_WIDTH; ++x)
+		{
+			// Calculate the x coordinate from current iteration and scroll_x
+			const byte& background_x_coordinate = scroll_x + x;
+
+			// Calculate tile offset
+			const byte& background_x_tile_offset = background_x_coordinate % 8;
+
+			// Calculate the x tile number (same as before)
+			const byte& background_x_tile = (background_x_coordinate / 8) % 32;
+
+			// Calculate address by starting with the appropriate memory location, go to the appropriate y tile and then the appropriate x tile
+			const word& background_tile_address = background_tile_map_region + (background_y_tile * 32) + background_x_tile;
+
+			// Pointer to appropriate starting address
+			word tile_start_address = background_tile_map_region;
+
+			// Calculate start address (identifier is unsigned if bit 4 is enabled, signed otherwise)
+			if (bg_and_window_tile_map_region)
+			{
+				// Background tile number
+				const byte& background_tile_identifier = m_mmu->read_memory(background_tile_address);
+				tile_start_address += background_tile_identifier * TILE_SIZE;
+			}
+			else
+			{
+				// Background tile number
+				const ibyte& background_tile_identifier = m_mmu->read_memory(background_tile_address);
+				tile_start_address += static_cast<ibyte>(background_tile_identifier) * TILE_SIZE;
+			}
+
+			// Need to factor y offset (each line is two bytes long)
+			tile_start_address += (background_y_tile_offset * 2);
+
+			// Read tile data from memory
+			byte data_1 = m_mmu->read_memory(tile_start_address);
+			byte data_2 = m_mmu->read_memory(tile_start_address + 1);
+
+			// Get colour id by finding the values at the corresponding x offset
+			byte colour_id = (((data_2 >> background_x_tile_offset) & 0x1) << 1) | ((data_1 >> background_x_tile_offset) & 0x1);
+
+			// Get colour based on palette
+			Colour colour_to_draw = get_colour_from_palette(colour_id);
+
+			byte red = 0x00;
+			byte green = 0x00;
+			byte blue = 0x00;
+			byte alpha = 0xFF;
+
+			switch (colour_to_draw)
+			{
+			case WHITE:
+				red = 0xFF; green = 0xFF; blue = 0xFF;
+				break;
+			case LIGHT_GREY:
+				red = 0xCC; green = 0xCC; blue = 0xCC;
+				break;
+			case DARK_GREY:
+				red = 0x77; green = 0x77; blue = 0x77;
+				break;
+			case BLACK:
+				red = 0x00; green = 0x00; blue = 0x00;
+				break;
+			default:
+				fprintf(stderr, "Unknown Game Boy colour receieved from palette");
+				break;
+			}
+
+			// Draw on display
+			display[x][scanline][0] = red;
+			display[x][scanline][1] = green;
+			display[x][scanline][2] = blue;
+			display[x][scanline][3] = alpha;
+		}
+	}
+	else
+	{
+		// If background is disabled, then we render a blank screen (i.e. white)
+		set_display_uniform_colour(0x0, 0x0, 0x0);
+	}
+}
+
 void GPU::render_tiles()
 {
-	// Read all releveant coordinates from memory
-	read_display_coordinates();
+	// Check if window is enabled and if window is visible relative to scanline
+	bool window_visible = window_display_enable && window_y <= scanline;
 
 	// Tiles start at 0x8000
 	word tile_memory_region = TILE_LOCATION;
@@ -163,6 +279,16 @@ void GPU::render_tiles()
 	if (!bg_tile_set_region)
 		tile_memory_region += TILE_LOCATION_MODIFIER;
 
+	// Backgrounds start at 0x9800
+	word background_memory_region = BACKGROUND_LOCATION;
+
+	// Change background memory location if window not visible
+	if (!window_visible && bg_and_window_tile_map_region)
+		background_memory_region += BACKGROUND_LOCATION_MODIFIER;
+	// Change background memory location if window is visible
+	else if (window_display_enable && window_tile_map_region)
+		background_memory_region += BACKGROUND_LOCATION_MODIFIER;
+
 	// Need to get the identifier
 	word tile_start_address = tile_memory_region;
 
@@ -170,15 +296,17 @@ void GPU::render_tiles()
 		tile_start_address += (/*identifier*/ +128) * TILE_SIZE;
 	else
 		tile_start_address += (/*identifier*/ +0) * TILE_SIZE;
+
+	//Colour colour_to_draw = get_colour_from_palette(, BG_PALETTE_LOCATION)
 }
 
-Colour GPU::get_colour_from_palette(const byte& colour_id, const word& address)
+Colour GPU::get_colour_from_palette(const byte& colour_id)
 {
 	// Initialize to white in case something goes wrong
 	Colour colour = WHITE;
 
 	// Retrieve palette
-	const byte& palette = m_mmu->read_memory(address);
+	const byte& palette = m_mmu->read_memory(BG_PALETTE_LOCATION);
 
 	// Retrieve colour from palette based on id
 	switch (colour_id)
@@ -274,7 +402,7 @@ void GPU::read_lcd_control()
 	sprite_display_enable = (lcd_control >> 1) & 0x1;
 	sprite_size = (lcd_control >> 2) & 0x1;
 	bg_tile_map_region = (lcd_control >> 3) & 0x1;
-	bg_tile_set_region = (lcd_control >> 4) & 0x1;
+	bg_and_window_tile_map_region = (lcd_control >> 4) & 0x1;
 	window_display_enable = (lcd_control >> 5) & 0x1;
 	window_tile_map_region = (lcd_control >> 6) & 0x1;
 	lcd_display_enable = (lcd_control >> 7) & 0x1;
@@ -337,7 +465,7 @@ void GPU::write_lcd_control()
 	byte result = (lcd_display_enable << 7)
 		| (window_tile_map_region << 6)
 		| (window_display_enable << 5)
-		| (bg_tile_set_region << 4)
+		| (bg_and_window_tile_map_region << 4)
 		| (bg_tile_map_region << 3)
 		| (sprite_size << 2)
 		| (sprite_display_enable << 1)

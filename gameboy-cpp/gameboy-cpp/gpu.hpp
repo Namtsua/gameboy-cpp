@@ -17,6 +17,9 @@
 #define TILE_LOCATION_MODIFIER 0x800
 #define TILE_SIZE 0x10
 
+#define BACKGROUND_LOCATION 0x9800
+#define BACKGROUND_LOCATION_MODIFIER 0x400
+
 #define LCD_CONTROL_LOCATION 0xFF40
 #define LCD_STATUS_LOCATION 0xFF41
 #define SCROLL_Y_LOCATION 0xFF42
@@ -44,8 +47,9 @@ public:
 	void clear_display();
 	void clear_tileset();
 	void render_scanline();
+	void render_background_scanline();
 	void render_tiles();
-	Colour get_colour_from_palette(const byte& colour_id, const word& address);
+	Colour get_colour_from_palette(const byte& colour_id);
 	void render_sprites();
 	void render_frame();
 	void set_display_uniform_colour(const byte& r, const byte& g, const byte& b);
@@ -89,7 +93,7 @@ private:
 	byte sprite_display_enable;
 	byte sprite_size;
 	byte bg_tile_map_region;
-	byte bg_tile_set_region;
+	byte bg_and_window_tile_map_region;
 	byte window_display_enable;
 	byte window_tile_map_region;
 	byte lcd_display_enable;
