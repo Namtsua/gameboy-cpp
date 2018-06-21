@@ -40,7 +40,6 @@ int main(int argc, char* argv[])
 		//}
 	}
 
-
 	close_SDL();
 	return EXIT_SUCCESS;
 }

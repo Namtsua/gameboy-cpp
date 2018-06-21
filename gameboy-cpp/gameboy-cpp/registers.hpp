@@ -97,7 +97,6 @@ public:
 		byte* lower_register;
 	};
 
-
 private:
 	byte A; byte F;
 	byte B; byte C;
@@ -107,6 +106,4 @@ private:
 	word PC;
 	byte m;
 	byte t;
-
 };
-

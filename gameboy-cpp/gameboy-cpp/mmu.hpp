@@ -25,7 +25,6 @@ public:
 	void set_current_scanline(const byte& value);
 	void increment_current_scanline();
 
-
 	inline void clear_memory()
 	{
 		for (int i = 0; i < bank_size; ++i)
@@ -86,7 +85,7 @@ public:
 		memory_mapped_io[0x49] = 0xFF;
 		memory_mapped_io[0x4A] = 0x00;
 		memory_mapped_io[0x4B] = 0x00;
-		zero_page_ram[0xFF] = 0x00;
+		//zero_page_ram[0xFF] = 0x00;
 	}
 
 private:

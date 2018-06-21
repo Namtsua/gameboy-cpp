@@ -32,7 +32,6 @@
 #define WINDOW_Y_LOCATION 0xFF4A
 #define WINDOW_X_LOCATION 0xFF4B // minus 7
 
-
 using namespace std;
 using namespace Constants;
 

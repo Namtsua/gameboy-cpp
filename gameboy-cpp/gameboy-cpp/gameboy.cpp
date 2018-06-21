@@ -1,13 +1,12 @@
 #include "gameboy.hpp"
 
-
 MMU* mmu = NULL;
 Cartridge* cart = NULL;
 CPU* cpu = NULL;
 GPU* gpu = NULL;
 SDL_Renderer* sdl_renderer = NULL;
 
-GameBoy::GameBoy(SDL_Renderer* renderer) 
+GameBoy::GameBoy(SDL_Renderer* renderer)
 {
 	sdl_renderer = renderer;
 }

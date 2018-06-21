@@ -8,11 +8,11 @@
 
 class GameBoy
 {
-	public:
-		GameBoy(SDL_Renderer* renderer);
-		~GameBoy();
-		void start();
-		void cycle();
+public:
+	GameBoy(SDL_Renderer* renderer);
+	~GameBoy();
+	void start();
+	void cycle();
 
 private:
 	Registers r;

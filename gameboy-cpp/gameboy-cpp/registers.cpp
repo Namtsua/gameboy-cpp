@@ -710,7 +710,7 @@ void Registers::decrement_register(const Register& r)
 {
 	byte result = get_register(r) - 1;
 
-	if (result = 0x00)
+	if (result == 0x00)
 		SET_FLAG(ZERO_FLAG);
 	else
 		CLEAR_FLAG(ZERO_FLAG);
