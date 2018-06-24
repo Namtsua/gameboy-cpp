@@ -22,6 +22,10 @@
 #define WINDOW_TILE_MAP_LOCATION 0x9800
 #define WINDOW_TILE_MAP_LOCATION_MODIFIER 0x400
 
+#define SPRITE_ATTRIBUTE_TABLE_LOCATION 0xFE00
+#define SPRITE_ENTRY_SIZE 0x4
+#define SPRITE_AMOUNT 40
+
 #define LCD_CONTROL_LOCATION 0xFF40
 #define LCD_STATUS_LOCATION 0xFF41
 #define SCROLL_Y_LOCATION 0xFF42
@@ -51,6 +55,7 @@ public:
 	void render_background_scanline();
 	void render_window_scanline();
 	Colour get_colour_from_palette(const byte& colour_id);
+	Colour get_colour_from_palette(const byte& colour_id, const word& address);
 	void render_sprites();
 	void render_frame();
 	void set_display_uniform_colour(const byte& r, const byte& g, const byte& b);

@@ -201,9 +201,9 @@ void GPU::render_background_scanline()
 
 			// Calculate address by starting with the appropriate memory location, go to the appropriate y tile and then the appropriate x tile
 			const word& background_tile_address = static_cast<word>(background_tile_map_region + (background_y_tile * 32) + background_x_tile);
-
-			// Pointer to appropriate starting address
-			word tile_start_address = background_tile_map_region;
+			asdf
+				// Pointer to appropriate starting address
+				word tile_start_address = background_tile_map_region;
 
 			// Calculate start address (identifier is unsigned if bit 4 is enabled, signed otherwise)
 			if (bg_and_window_tile_map_region)
@@ -378,6 +378,99 @@ void GPU::render_window_scanline()
 	}
 }
 
+void GPU::render_sprites()
+{
+	if (sprite_display_enable)
+	{
+		// Sprite Attribute Table (OAM) starts at 0xFE00
+		const word& sprite_attribute_table_region = SPRITE_ATTRIBUTE_TABLE_LOCATION;
+
+		// Srites are always 8 pixels wide
+		const byte& sprite_width = 8;
+
+		for (int i = 0; i < SPRITE_AMOUNT * 4; i += 4)
+		{
+			// Since y position determines if we render the sprite, only read it for now
+			const byte& sprite_y_position = m_mmu->read_memory(sprite_attribute_table_region + i) - 16;
+
+			// Assume sprite is 8x8
+			bool bigger_sprite = false;
+			byte sprite_height = 8;
+
+			// Adjust if sprite is 8x16
+			if (sprite_size)
+			{
+				bigger_sprite = true;
+				sprite_height *= 2;
+			}
+
+			// Render sprite if it hasn't ended before the current scanline
+			if ((sprite_y_position <= scanline) && (sprite_y_position + sprite_height > scanline))
+			{
+				// Now that we know we will render the sprite, read the remaining properties
+				const byte& sprite_x_position = m_mmu->read_memory(sprite_attribute_table_region + i + 1) - 8;
+				byte sprite_tile_number = m_mmu->read_memory(sprite_attribute_table_region + i + 2);
+				const byte& sprite_attributes = m_mmu->read_memory(sprite_attribute_table_region + i + 3);
+
+				// Read relevant attributes
+				const byte& palette_number = (sprite_attributes >> 4) & 0x1;
+				const byte& x_flip = (sprite_attributes >> 5) & 0x1;
+				const byte& y_flip = (sprite_attributes >> 6) & 0x1;
+				const byte& obj_bg_priority = (sprite_attributes >> 7) & 0x1;
+
+				// We ignore the lower bit of 8x16 sprites
+				if (bigger_sprite)
+					sprite_tile_number &= 0xFE;
+
+
+
+				for (int x = 0; x < DISPLAY_WIDTH; ++x)
+				{
+
+					if (x < sprite_x_position)
+						continue;
+
+					byte colour_id = 0x00;
+
+
+					// Get colour based on palette
+					Colour colour_to_draw = get_colour_from_palette(colour_id, palette_number ? OBJECT_PALETTE_1_LOCATION : OBJECT_PALETTE_0_LOCATION);
+
+					byte red = 0x00;
+					byte green = 0x00;
+					byte blue = 0x00;
+					byte alpha = 0xFF;
+
+					switch (colour_to_draw)
+					{
+					case WHITE:
+						red = 0xFF; green = 0xFF; blue = 0xFF;
+						break;
+					case LIGHT_GREY:
+						red = 0xCC; green = 0xCC; blue = 0xCC;
+						break;
+					case DARK_GREY:
+						red = 0x77; green = 0x77; blue = 0x77;
+						break;
+					case BLACK:
+						red = 0x00; green = 0x00; blue = 0x00;
+						break;
+					default:
+						fprintf(stderr, "Unknown Game Boy colour receieved from palette");
+						break;
+					}
+
+					// Draw on display
+					display[x][scanline][0] = red;
+					display[x][scanline][1] = green;
+					display[x][scanline][2] = blue;
+					display[x][scanline][3] = alpha;
+				}
+			}
+		}
+	}
+}
+
 Colour GPU::get_colour_from_palette(const byte& colour_id)
 {
 	// Initialize to white in case something goes wrong
@@ -409,8 +502,35 @@ Colour GPU::get_colour_from_palette(const byte& colour_id)
 	return colour;
 }
 
-void GPU::render_sprites()
+Colour GPU::get_colour_from_palette(const byte& colour_id, const word& address)
 {
+	// Initialize to white in case something goes wrong
+	Colour colour = WHITE;
+
+	// Retrieve palette
+	const byte& palette = m_mmu->read_memory(address);
+
+	// Retrieve colour from palette based on id
+	switch (colour_id)
+	{
+	case 0x00:
+		colour = static_cast<Colour>(palette & 0x3);
+		break;
+	case 0x01:
+		colour = static_cast<Colour>((palette >> 2) & 0x3);
+		break;
+	case 0x10:
+		colour = static_cast<Colour>((palette >> 4) & 0x3);
+		break;
+	case 0x11:
+		colour = static_cast<Colour>((palette >> 6) & 0x3);
+		break;
+	default:
+		fprintf(stderr, "Invalid colour ID provided");
+	}
+
+	// Return retrieved colour
+	return colour;
 }
 
 void GPU::render_frame()
