@@ -31,7 +31,7 @@ byte MMU::read_memory(const word& address) const
 		//	Graphics RAM
 	case 0x8000:
 	case 0x9000:
-		return graphics_ram[address - 0x8000];
+		return vram[address - 0x8000];
 
 		// Cartridge External RAM
 	case 0xA000:
@@ -101,7 +101,7 @@ void MMU::write_memory(const word& address, const byte& value)
 		//	Graphics RAM
 	case 0x8000:
 	case 0x9000:
-		graphics_ram[address - 0x8000] = value;
+		vram[address - 0x8000] = value;
 		break;
 
 		// Cartridge External RAM

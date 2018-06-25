@@ -34,7 +34,7 @@ public:
 
 		for (int i = 0; i < ram_size; ++i)
 		{
-			graphics_ram[i] = 0x0;
+			vram[i] = 0x0;
 			cartridge_external_ram[i] = 0x0;
 			working_ram[i] = 0x0;
 		}
@@ -90,7 +90,7 @@ public:
 
 private:
 	byte cartridge_bank[bank_size];
-	byte graphics_ram[graphics_ram_size];
+	byte vram[graphics_ram_size];
 	byte cartridge_external_ram[external_ram_size];
 	byte working_ram[working_ram_size];
 	byte working_ram_shadow[working_ram_shadow_size];

@@ -201,9 +201,9 @@ void GPU::render_background_scanline()
 
 			// Calculate address by starting with the appropriate memory location, go to the appropriate y tile and then the appropriate x tile
 			const word& background_tile_address = static_cast<word>(background_tile_map_region + (background_y_tile * 32) + background_x_tile);
-			asdf
-				// Pointer to appropriate starting address
-				word tile_start_address = background_tile_map_region;
+			
+			// Pointer to appropriate starting address
+			word tile_start_address = background_tile_map_region;
 
 			// Calculate start address (identifier is unsigned if bit 4 is enabled, signed otherwise)
 			if (bg_and_window_tile_map_region)
@@ -422,19 +422,47 @@ void GPU::render_sprites()
 				if (bigger_sprite)
 					sprite_tile_number &= 0xFE;
 
+				// Calculate the current y line relative to scanline (0 being top of sprite)
+				word sprite_y_line = (scanline - sprite_y_position);
 
-
-				for (int x = 0; x < DISPLAY_WIDTH; ++x)
+				// Factor in y-flip (check properly)
+				if (y_flip)
 				{
+					sprite_y_line -= sprite_size;
+					sprite_y_line *= -1;
+				}
 
-					if (x < sprite_x_position)
-						continue;
+				// Calculate address of the current sprite tile
+				const word& sprite_tile_address = VRAM_LOCATION + (sprite_tile_number * TILE_SIZE);
 
-					byte colour_id = 0x00;
+				// Pointer to appropriate starting address
+				word tile_start_address = sprite_tile_address;
 
+				// Need to factor y offset (each line is two bytes long)
+				tile_start_address += (sprite_y_line * 2);
+
+				// Read tile data from memory (check on these)
+				byte data_1 = m_mmu->read_memory(tile_start_address);
+				byte data_2 = m_mmu->read_memory(tile_start_address + 1);
+
+				// Loop through all 8 pixels
+				for (int tile_pixel = 7; tile_pixel >= 0; --tile_pixel)
+				{
+					byte colour_id = tile_pixel;
+					
+					// Check for x-flip
+					if (x_flip)
+					{
+						colour_id -= 7;
+						colour_id *= -1;
+					}
 
 					// Get colour based on palette
 					Colour colour_to_draw = get_colour_from_palette(colour_id, palette_number ? OBJECT_PALETTE_1_LOCATION : OBJECT_PALETTE_0_LOCATION);
+
+					// White means transparency for sprites
+					if (colour_to_draw == WHITE)
+						continue;
 
 					byte red = 0x00;
 					byte green = 0x00;
@@ -460,11 +488,14 @@ void GPU::render_sprites()
 						break;
 					}
 
+					// Since we iterated backwards, we flip it to find proper x coordinate
+					byte sprite_x_coordinate = -tile_pixel + 7;
+
 					// Draw on display
-					display[x][scanline][0] = red;
-					display[x][scanline][1] = green;
-					display[x][scanline][2] = blue;
-					display[x][scanline][3] = alpha;
+					display[sprite_x_coordinate][scanline][0] = red;
+					display[sprite_x_coordinate][scanline][1] = green;
+					display[sprite_x_coordinate][scanline][2] = blue;
+					display[sprite_x_coordinate][scanline][3] = alpha;
 				}
 			}
 		}
