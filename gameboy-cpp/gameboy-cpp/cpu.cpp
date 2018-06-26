@@ -18,6 +18,7 @@ CPU::~CPU() {}
 
 void CPU::cycle()
 {
+	debug_mode = true;
 	Register dst;
 	CombinedRegister cr_dst;
 	byte src;
@@ -33,7 +34,8 @@ void CPU::cycle()
 	const word& pc = m_registers.get_program_counter();
 	const word& sp = m_registers.get_stack_pointer();
 	const word& opcode = decode(pc);
-	//	fprintf(stderr, "Opcode received: ")
+	if (debug_mode)
+		fprintf(stderr, "Opcode received: %X\n", opcode);
 	switch (opcode)
 	{
 		// LD <CReg>, <u16>
@@ -156,9 +158,8 @@ void CPU::cycle()
 		break;
 
 		// STOP
-	case 0x10:	// STOP	NEEDS TO ACTUALLY STOP STUFF
-		m_registers.increment_clock_cycles(4, 1);
-		pc_step += 2;
+	case 0x10:
+		stop_enable = true;
 		break;
 
 		// RLA
@@ -393,6 +394,11 @@ void CPU::cycle()
 		m_mmu->write_memory(immediate_u16, src);
 		m_registers.increment_clock_cycles(8, 2);
 		pc_step += 1;
+		break;
+
+		// HALT
+	case 0x76:
+		halt_enable = true;
 		break;
 
 	case 0x80:	case 0x81:	case 0x82:	case 0x83:	case 0x84:	case 0x85:	case 0x87:	// ADD A, <reg>
@@ -771,6 +777,16 @@ void CPU::cycle()
 		}
 		break;
 
+		// RETI
+	case 0xD9:
+		interrupt_master_enable = true;
+		immediate_u16 = m_mmu->read_memory(sp + 1) << 8 | m_mmu->read_memory(sp) & 0xFF;
+		m_registers.increment_stack_pointer();
+		m_registers.increment_stack_pointer();
+		m_registers.set_program_counter(immediate_u16);
+		m_registers.increment_clock_cycles(16, 4);
+		break;
+
 		// JP C, <u16>
 	case 0xDA:
 		immediate_u16 = m_mmu->read_memory(pc + 2) << 8 | m_mmu->read_memory(pc + 1);
@@ -908,6 +924,13 @@ void CPU::cycle()
 		m_registers.set_register(dst, src);
 		m_registers.increment_clock_cycles(8, 2);
 		pc_step += 2;
+		break;
+
+	case 0xF3:	// Disable Interrupts
+		interrupt_master_enable = false;
+		m_registers.increment_clock_cycles(4, 1);
+		pc_step += 1;
+		break;
 
 	case 0xF6:	// OR A, <u8>
 		dst = R_A;
@@ -949,6 +972,13 @@ void CPU::cycle()
 		m_registers.increment_clock_cycles(16, 4);
 		pc_step += 3;
 		break;
+
+	case 0xFB:	// Enable Interrupts
+		interrupt_master_enable = true;
+		m_registers.increment_clock_cycles(4, 1);
+		pc_step += 1;
+		break;
+
 	case 0xFE:	// CP A, <u8>
 		dst = R_A;
 		immediate_u8 = m_mmu->read_memory(pc + 1);
@@ -977,6 +1007,9 @@ void CPU::cycle()
 	}
 
 	m_registers.advance_program_counter(pc_step);
+
+	if (debug_mode)
+		print_registers();
 }
 
 void CPU::CB(const byte& opcode)
@@ -1198,6 +1231,11 @@ void CPU::CB(const byte& opcode)
 	}
 }
 
+void CPU::handle_interrupts()
+{
+
+}
+
 byte CPU::decode(const word& pc)
 {
 	return m_mmu->read_memory(pc);
@@ -1206,4 +1244,23 @@ byte CPU::decode(const word& pc)
 std::pair<byte, byte> CPU::get_clock_cycles() const
 {
 	return m_registers.get_clock_cycles();
+}
+
+void CPU::print_registers() const
+{
+	fprintf(stderr, "A: 0x%X F: 0x%X B: 0x%X C: 0x%X D: 0x%X E: 0x%X H: 0x%X L: 0x%X\n",
+		m_registers.get_register(R_A),
+		m_registers.get_register(R_F),
+		m_registers.get_register(R_B),
+		m_registers.get_register(R_C),
+		m_registers.get_register(R_D),
+		m_registers.get_register(R_E),
+		m_registers.get_register(R_H),
+		m_registers.get_register(R_L)
+		);
+	fprintf(stderr, "PC: 0x%X SP: 0x%X\n",
+		m_registers.get_program_counter(),
+		m_registers.get_stack_pointer()
+		);
+	fprintf(stderr, "******************************\n");
 }
