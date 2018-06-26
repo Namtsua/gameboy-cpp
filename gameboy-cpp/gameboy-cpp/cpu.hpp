@@ -2,6 +2,7 @@
 #include "registers.hpp"
 #include "mmu.hpp"
 
+#define INTERRUPT_LOCATION 0xFF0F
 class CPU
 {
 public:
@@ -11,6 +12,7 @@ public:
 	byte decode(const word& pc);
 	void CB(const byte& opcode);
 	void handle_interrupts();
+	void request_interrupt(Interrupt interrupt);
 	std::pair<byte, byte> get_clock_cycles() const;
 	void print_registers() const;
 

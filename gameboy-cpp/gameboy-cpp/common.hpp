@@ -34,6 +34,14 @@ enum CombinedRegister
 	R_AF,
 };
 
+enum Interrupt
+{
+	V_BLANK_INTERRUPT,
+	LCD_INTERRUPT,
+	TIMER_INTERRUPT,
+	JOYPAD_INTERRUPT
+};
+
 enum Keys
 {
 	KEY_DEFAULT,

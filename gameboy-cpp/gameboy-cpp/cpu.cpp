@@ -1233,7 +1233,16 @@ void CPU::CB(const byte& opcode)
 
 void CPU::handle_interrupts()
 {
+	// Do not handle interrupts if master switch isn't enabled
+	if (!interrupt_master_enable)
+		return;
 
+
+}
+
+void CPU::request_interrupt(Interrupt interrupt)
+{
+	byte interrupt_status = m_mmu->read_memory(INTERRUPT_LOCATION);
 }
 
 byte CPU::decode(const word& pc)

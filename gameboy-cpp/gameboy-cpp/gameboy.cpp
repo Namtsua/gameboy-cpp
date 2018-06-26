@@ -20,6 +20,8 @@ void GameBoy::start()
 	cart->load("./roms/DMG_ROM.bin");
 	cpu = new CPU(mmu);
 	gpu = new GPU(cpu, mmu, sdl_renderer);
+	// comment if not in debug
+	cpu->print_registers();
 }
 
 void GameBoy::cycle()
