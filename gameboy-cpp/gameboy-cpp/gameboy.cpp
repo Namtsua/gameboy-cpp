@@ -28,4 +28,5 @@ void GameBoy::cycle()
 {
 	cpu->cycle();
 	gpu->cycle();
+	cpu->handle_interrupts();
 }

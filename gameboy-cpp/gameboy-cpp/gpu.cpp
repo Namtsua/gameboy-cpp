@@ -51,7 +51,8 @@ void GPU::handle_gpu_mode()
 			render_scanline();
 			if (mode_0_hblank_interrupt)
 			{
-				// Send interrupt
+				// Request an LCD interrupt
+				m_cpu->request_interrupt(LCD_INTERRUPT);
 			}
 		}
 		break;
@@ -68,10 +69,14 @@ void GPU::handle_gpu_mode()
 			{
 				gpu_mode = VERTICAL_BLANK;
 				render_frame();
-				// Trigger interrupt
+
+				// Request A vertical blank interrupt
+				m_cpu->request_interrupt(V_BLANK_INTERRUPT);
+
 				if (mode_1_vblank_interrupt)
 				{
-					// Send interrupt
+					// Request an LCD interrupt
+					m_cpu->request_interrupt(LCD_INTERRUPT);
 				}
 			}
 			else
@@ -79,7 +84,8 @@ void GPU::handle_gpu_mode()
 				gpu_mode = OAM_READ_MODE;
 				if (mode_2_oam_interrupt)
 				{
-					// Send interrupt
+					// Request an LCD interrupt
+					m_cpu->request_interrupt(LCD_INTERRUPT);
 				}
 			}
 		}
@@ -98,7 +104,8 @@ void GPU::handle_gpu_mode()
 				m_mmu->set_current_scanline(0);
 				if (mode_2_oam_interrupt)
 				{
-					// Send interrupt
+					// Request an LCD interrupt
+					m_cpu->request_interrupt(LCD_INTERRUPT);
 				}
 			}
 		}
@@ -111,7 +118,8 @@ void GPU::handle_gpu_mode()
 		coincidence_flag = 0x1;
 		if (lyc_ly_coincidence_interrupt)
 		{
-			// Request an interrupt
+			// Request an LCD interrupt
+			m_cpu->request_interrupt(LCD_INTERRUPT);
 		}
 	}
 	else

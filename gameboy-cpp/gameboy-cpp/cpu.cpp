@@ -291,7 +291,7 @@ void CPU::cycle()
 		// ADD HL, SP
 	case 0x39:
 		cr_dst = R_HL;
-		cr_src = m_registers.get_program_counter();
+		cr_src = m_registers.get_stack_pointer();
 		m_registers.register_addition(cr_dst, cr_src);
 		m_registers.increment_clock_cycles(8, 2);
 		pc_step += 2;
@@ -1236,13 +1236,96 @@ void CPU::handle_interrupts()
 	// Do not handle interrupts if master switch isn't enabled
 	if (!interrupt_master_enable)
 		return;
+	
+	// Read current program counter
+	const word& pc = m_registers.get_program_counter();
 
+	// readc current stack pointer
+	const word& sp = m_registers.get_stack_pointer();
 
+	// Read the interrupt flag byte from memory
+	const byte& interrupt_status = m_mmu->read_memory(INTERRUPT_FLAG_LOCATION);
+
+	// Read the interrupt enable byte from memory
+	const byte& interrupt_enable = m_mmu->read_memory(INTERRUPT_ENABLE_LOCATION);
+
+	// Check each interrupt (in order of priority) and only handle them if they've been set in both the interrupt status byte and enable byte
+
+	// Check for V Blank interrupt
+	if (interrupt_status & V_BLANK_INTERRUPT_MASK && interrupt_enable & V_BLANK_INTERRUPT_MASK)
+	{
+		interrupt_master_enable = false;
+
+		// Push PC onto the stack
+		m_mmu->write_memory(sp, pc >> 8);
+		m_registers.decrement_stack_pointer();
+		m_mmu->write_memory(sp, pc & 0xFF);
+		m_registers.decrement_stack_pointer();
+
+		// Jump to interrupt service address
+		m_registers.set_program_counter(V_BLANK_SERVICE_LOCATION);
+
+	}
+
+	// Check for LCD interrupt
+	if (interrupt_status & LCD_INTERRUPT_MASK && interrupt_enable & LCD_INTERRUPT_MASK)
+	{
+		interrupt_master_enable = false;
+
+		// Push PC onto the stack
+		m_mmu->write_memory(sp, pc >> 8);
+		m_registers.decrement_stack_pointer();
+		m_mmu->write_memory(sp, pc & 0xFF);
+		m_registers.decrement_stack_pointer();
+
+		// Jump to interrupt service address
+		m_registers.set_program_counter(LCD_SERVICE_LOCATION);
+	}
+
+	// Check for Timer interrupt
+	if (interrupt_status & TIMER_INTERRUPT_MASK && interrupt_enable & TIMER_INTERRUPT_MASK)
+	{
+		interrupt_master_enable = false;
+
+		// Push PC onto the stack
+		m_mmu->write_memory(sp, pc >> 8);
+		m_registers.decrement_stack_pointer();
+		m_mmu->write_memory(sp, pc & 0xFF);
+		m_registers.decrement_stack_pointer();
+
+		// Jump to interrupt service address
+		m_registers.set_program_counter(TIMER_SERVICE_LOCATION);
+	}
+
+	// Check for Serial interrupt (not supported)
+	if (interrupt_status & SERIAL_INTERRUPT_MASK && interrupt_enable & SERIAL_INTERRUPT_MASK)
+	{
+		interrupt_master_enable = false;
+		fprintf(stderr, "Serial interrupt has been set, not currently supported!\n");
+	}
+
+	// Check for Joypad interrupt
+	if (interrupt_status & JOYPAD_INTERRUPT_MASK && interrupt_enable & JOYPAD_INTERRUPT_MASK)
+	{
+		interrupt_master_enable = false;
+
+		// Push PC onto the stack
+		m_mmu->write_memory(sp, pc >> 8);
+		m_registers.decrement_stack_pointer();
+		m_mmu->write_memory(sp, pc & 0xFF);
+		m_registers.decrement_stack_pointer();
+
+		// Jump to interrupt service address
+		m_registers.set_program_counter(TIMER_SERVICE_LOCATION);
+
+	}
 }
 
 void CPU::request_interrupt(Interrupt interrupt)
 {
-	byte interrupt_status = m_mmu->read_memory(INTERRUPT_LOCATION);
+	// Read the interrupt flag byte from memory and set the appropriate interrupt bit
+	byte interrupt_status = m_mmu->read_memory(INTERRUPT_FLAG_LOCATION) | (0x1 << interrupt);
+	m_mmu->write_memory(INTERRUPT_FLAG_LOCATION, interrupt_status);
 }
 
 byte CPU::decode(const word& pc)
