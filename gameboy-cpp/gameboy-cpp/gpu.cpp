@@ -209,7 +209,7 @@ void GPU::render_background_scanline()
 
 			// Calculate address by starting with the appropriate memory location, go to the appropriate y tile and then the appropriate x tile
 			const word& background_tile_address = static_cast<word>(background_tile_map_region + (background_y_tile * 32) + background_x_tile);
-			
+
 			// Pointer to appropriate starting address
 			word tile_start_address = background_tile_map_region;
 
@@ -457,7 +457,7 @@ void GPU::render_sprites()
 				for (int tile_pixel = 7; tile_pixel >= 0; --tile_pixel)
 				{
 					byte colour_id = tile_pixel;
-					
+
 					// Check for x-flip
 					if (x_flip)
 					{

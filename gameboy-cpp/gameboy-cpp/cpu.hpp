@@ -16,7 +16,6 @@
 #define SERIAL_INTERRUPT_MASK 0x8
 #define JOYPAD_INTERRUPT_MASK 0x10
 
-
 class CPU
 {
 public:

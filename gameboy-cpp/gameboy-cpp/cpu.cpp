@@ -1236,7 +1236,7 @@ void CPU::handle_interrupts()
 	// Do not handle interrupts if master switch isn't enabled
 	if (!interrupt_master_enable)
 		return;
-	
+
 	// Read current program counter
 	const word& pc = m_registers.get_program_counter();
 
@@ -1264,7 +1264,6 @@ void CPU::handle_interrupts()
 
 		// Jump to interrupt service address
 		m_registers.set_program_counter(V_BLANK_SERVICE_LOCATION);
-
 	}
 
 	// Check for LCD interrupt
@@ -1317,7 +1316,6 @@ void CPU::handle_interrupts()
 
 		// Jump to interrupt service address
 		m_registers.set_program_counter(TIMER_SERVICE_LOCATION);
-
 	}
 }
 
@@ -1349,10 +1347,10 @@ void CPU::print_registers() const
 		m_registers.get_register(R_E),
 		m_registers.get_register(R_H),
 		m_registers.get_register(R_L)
-		);
+	);
 	fprintf(stderr, "PC: 0x%X SP: 0x%X\n",
 		m_registers.get_program_counter(),
 		m_registers.get_stack_pointer()
-		);
+	);
 	fprintf(stderr, "******************************\n");
 }

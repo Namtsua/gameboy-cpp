@@ -87,7 +87,7 @@ public:
 	byte display[DISPLAY_WIDTH][DISPLAY_HEIGHT][RGBA_LENGTH];
 
 private:
-	CPU* m_cpu;
+	CPU * m_cpu;
 	MMU* m_mmu;
 	SDL_Renderer* m_renderer;
 	byte gpu_mode_clock;
